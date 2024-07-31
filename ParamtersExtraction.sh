@@ -8,7 +8,7 @@
 
 
 ## Main Script Starts from here
-File_with_Dataset_Names="/Users/njain/Desktop/MPI/DatasetNames.txt"
+File_with_Dataset_Names="/Users/njain/Desktop/data.txt"
 
 indices=(1) #enter the index number of the file name that you would like to analyse
 
@@ -18,7 +18,7 @@ for datasets in "${indices[@]}"; do
     echo "Dataset Currently Being Analysed is": $DatasetName
 
     #Locate the source of Raw Data on the server, this needs to be changed by the user based on the paths defined in their system#
-    Raw_Data_Path="/Users/njain/Desktop/MPI/RawData/$DatasetName"
+    Raw_Data_Path="/Users/njain/Desktop/$DatasetName"
     cd ${Raw_Data_Path}
 
     for run in *; do
@@ -45,7 +45,7 @@ for datasets in "${indices[@]}"; do
             Orientation=$(echo "$Orient" | sed 's/[<>]//g')
 
               
-            echo "E$run\t$SequenceName\t$FieldOfView\t$MatrixSize\t$Orientation" >> Parameters.txt
+            echo "E$run\t$SequenceName\t$FieldOfView\t$MatrixSize\t$Orientation" >> ~/Desktop/Parameters.txt
         else    
             echo "It is a Bruker Scan related file"
         fi

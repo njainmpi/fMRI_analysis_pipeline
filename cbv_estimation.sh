@@ -7,6 +7,7 @@
 
 # for MGE, Bo distortion correction is needed
 
+export PATH=/Users/njain/Desktop/NeuroimagingSoftwares/ANTs/install/bin/:$PATH
 
 Bo_MAP () {
 
@@ -24,5 +25,5 @@ LEP () {
 
 BIAS_FIELD_CORRECTIOn () {
 
-    
+
 }
