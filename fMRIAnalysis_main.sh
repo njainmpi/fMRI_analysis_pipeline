@@ -30,6 +30,9 @@ for datasets in "${indices[@]}"; do
     Raw_Data_Path="/Volumes/pr_ohlendorf/fMRI/Project1_CBV_fMRI_NJ/RawData/$DatasetName"
     Analysed_Data_Path="/Volumes/pr_ohlendorf/fMRI/Project1_CBV_fMRI_NJ/AnalysedData/$DatasetName"
   
+    # Raw_Data_Path="/Users/njain/Desktop/$DatasetName"
+    # Analysed_Data_Path="/Users/njain/Desktop/MPI/$DatasetName"
+    
     CHECK_FILE_EXISTENCE $Analysed_Data_Path
    
     cd $Raw_Data_Path

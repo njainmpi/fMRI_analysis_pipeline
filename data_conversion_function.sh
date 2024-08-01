@@ -40,12 +40,20 @@ echo "Using brkraw to convert Bruker format to NIFTI"
 
     NoOfEchoImages=$(awk '/PVM_NEchoImages=/ {print substr($0,20,2)}' $3)
 
-    if [ $NoOfEchoImages == 1 ]; then 
-        cp *$2* G1_cp.nii.gz
+
+    if grep -q "$PVM_NEchoImages=" "$3"; then
+        NoOfEchoImages=$(awk '/PVM_NEchoImages=/ {print substr($0,20,2)}' $3)
+
+        if [ $NoOfEchoImages == 1 ]; then 
+            cp *$2* G1_cp.nii.gz
+        else
+            fslmerge -t $2'_combined_images' *$2*
+            cp $2'_combined_images'* G1_cp.nii.gz
+        fi
     else
-        fslmerge -t $2'_combined_images' *$2*
-        cp $2'_combined_images'* G1_cp.nii.gz
+        echo "No of Echoes not present"
+        cp *$2* G1_cp.nii.gz
     fi
-    
+
     fslhd G1_cp.nii.gz > NIFTI_file_header_info.txt
 }
