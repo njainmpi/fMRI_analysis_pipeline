@@ -12,6 +12,7 @@ source ./motion_correction_function.sh
 source ./temporal_SNR_spikes_smoothing_function.sh
 source ./time_series_function.sh
 
+
 # chmod +x ./Functions_Bash/*
 
 
@@ -77,31 +78,33 @@ for datasets in "${indices[@]}"; do
                     echo "It is a Structural Scan acquired using $SequenceName"
                 else 
                     echo "It is an fMRI scan"
-                    echo  "*************Checking for Stimulated Scan or Baseline Scan*************"
+                    echo  "*************Checking for Test Scan or Functional Scan*************"
                   
-                    Baseline_TRs=$(awk '/PreBaselineNum=/ {print substr($0,19,3)}' $Raw_Data_Path_Run/method)
-                    StimOn_TRs=$(awk '/StimNum=/ {print substr($0,12,2); exit}' $Raw_Data_Path_Run/method)  
-                    StimOff_TRs=$(awk '/InterStimNum=/ {print substr($0,17)}' $Raw_Data_Path_Run/method)  
-                    NoOfEpochs=$(awk '/NEpochs=/ {print substr($0,12)}' $Raw_Data_Path_Run/method)  
                     
-                    TaskDuration=$(echo "$Baseline_TRs + ($StimOn_TRs + $StimOff_TRs) * $NoOfEpochs" | bc)
+                    if grep -q "PreBaselineNum" "$Raw_Data_Path_Run/method"; then
+                        echo "It is either a functional or baseline scan"
+                        
+                        Baseline_TRs=$(awk '/PreBaselineNum=/ {print substr($0,19,3)}' $Raw_Data_Path_Run/method)
+                        StimOn_TRs=$(awk '/StimNum=/ {print substr($0,12,2); exit}' $Raw_Data_Path_Run/method)  
+                        StimOff_TRs=$(awk '/InterStimNum=/ {print substr($0,17)}' $Raw_Data_Path_Run/method)  
+                        NoOfEpochs=$(awk '/NEpochs=/ {print substr($0,12)}' $Raw_Data_Path_Run/method)  
                     
-                    BlockLength=$(($StimOn_TRs + $StimOff_TRs))
+                        TaskDuration=$(echo "$Baseline_TRs + ($StimOn_TRs + $StimOff_TRs) * $NoOfEpochs" | bc)
                     
-                    
-                    MiddleVolume=$(($NoOfRepetitions / 2))
+                        BlockLength=$(($StimOn_TRs + $StimOff_TRs))
+                        MiddleVolume=$(($NoOfRepetitions / 2))
                 
-                    MOTION_CORRECTION $MiddleVolume G1_cp.nii.gz
-                    CHECK_SPIKES rG1_fsl.nii.gz
+                        MOTION_CORRECTION $MiddleVolume G1_cp.nii.gz
+                        CHECK_SPIKES rG1_fsl.nii.gz
 
-                    if [ $TaskDuration == $NoOfRepetitions ]; then
-                        echo "It is Stimulated Scan with a total of $NoOfRepetitions Repetitions"
-                        TEMPORAL_SNR rG1_fsl.nii.gz
-                        SMOOTHING $Raw_Data_Path/$runnames/method
+                        if [ $TaskDuration == $NoOfRepetitions ]; then
+                            echo "It is Stimulated Scan with a total of $NoOfRepetitions Repetitions"
+                            TEMPORAL_SNR rG1_fsl.nii.gz
+                            SMOOTHING $Raw_Data_Path/$runnames/method
                 
-                        CHECK_FILE_EXISTENCE TimeSeiesVoxels
+                            CHECK_FILE_EXISTENCE TimeSeiesVoxels
                 
-                        CREATING_3_COLUMNS $NoOfEpochs $Baseline_TRs $BlockLength 3
+                            CREATING_3_COLUMNS $NoOfEpochs $Baseline_TRs $BlockLength 3
 
                         # fsleyes rG1_fsl_mean.nii.gz
                         # fsl_glm -i sG1_fsl.nii.gz -m rG1_fsl_mean.nii.gz -d ~/Desktop/$SequenceName.txt -o betamap --des_norm --dat_norm --demean --out_p=pmap_sm --out_z=zmap_sm
@@ -109,10 +112,14 @@ for datasets in "${indices[@]}"; do
 
                     # TIME_SERIES $Analysed_Data_Path/$runnames''$SequenceName/NIFTI_file_header_info.txt
             
-                    else
-                        echo "It is a Baseline Scan with a total of $NoOfRepetitions Repetitions"
-                        TEMPORAL_SNR rG1_fsl.nii.gz
-                        SMOOTHING $Raw_Data_Path/$runnames/method
+                        else
+                            echo "It is a Baseline Scan with a total of $NoOfRepetitions Repetitions"
+                            TEMPORAL_SNR rG1_fsl.nii.gz
+                            SMOOTHING $Raw_Data_Path/$runnames/method
+                        fi
+                    else 
+                        echo "It is a test scan"
+                    
                     fi
         
                 fi
