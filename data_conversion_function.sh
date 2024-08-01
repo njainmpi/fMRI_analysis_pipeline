@@ -38,12 +38,10 @@ echo "Using brkraw to convert Bruker format to NIFTI"
     brkraw tonii $1/ -s $2
     conda deactivate
 
-    NoOfEchoImages=$(awk '/PVM_NEchoImages=/ {print substr($0,20,2)}' $3)
-
-
-    if grep -q "$PVM_NEchoImages=" "$3"; then
+    if grep -q "PVM_NEchoImages" "$3"; then
         NoOfEchoImages=$(awk '/PVM_NEchoImages=/ {print substr($0,20,2)}' $3)
 
+        echo "No of echo images $NoOfEchoImages"
         if [ $NoOfEchoImages == 1 ]; then 
             cp *$2* G1_cp.nii.gz
         else
@@ -57,3 +55,4 @@ echo "Using brkraw to convert Bruker format to NIFTI"
 
     fslhd G1_cp.nii.gz > NIFTI_file_header_info.txt
 }
+
