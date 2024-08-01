@@ -28,7 +28,7 @@ file_name=$1
 shift
 
 # Function to extract and check variable presence and non-emptiness
-check_variable() {
+CHECK_VARIABLE() {
     local var_name=$1
     local var_value=$(awk -v var_name="$var_name" '
     BEGIN { FS = "=" }
@@ -43,5 +43,5 @@ check_variable() {
 
 # Loop through all provided variable names and check each one
 for var in "$@"; then
-    check_variable "$var"
+    CHECK_VARIABLE "$var"
 done
