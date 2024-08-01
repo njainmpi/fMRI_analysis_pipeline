@@ -67,7 +67,7 @@ for datasets in "${indices[@]}"; do
                 echo "This data is acquired using '$word_to_check'. This will not be analyzed."
 
             else
-                echo "The variable name does not contain the word '$word_to_check'."
+                echo "This data is not acquired using $word_to_check"
 
                 BRUKER_to_NIFTI $Raw_Data_Path $runnames $Raw_Data_Path/$runnames/method
 
