@@ -28,11 +28,11 @@ for datasets in "${indices[@]}"; do
     echo "Dataset Currently Being Analysed is": $DatasetName
 
     #Locate the source of Raw Data on the server, this needs to be changed by the user based on the paths defined in their system#
-    Raw_Data_Path="/Volumes/pr_ohlendorf/fMRI/Project1_CBV_fMRI_NJ/RawData/$DatasetName"
-    Analysed_Data_Path="/Volumes/pr_ohlendorf/fMRI/Project1_CBV_fMRI_NJ/AnalysedData/$DatasetName"
+    # Raw_Data_Path="/Volumes/pr_ohlendorf/fMRI/Project1_CBV_fMRI_NJ/RawData/$DatasetName"
+    # Analysed_Data_Path="/Volumes/pr_ohlendorf/fMRI/Project1_CBV_fMRI_NJ/AnalysedData/$DatasetName"
   
-    # Raw_Data_Path="/Users/njain/Desktop/$DatasetName"
-    # Analysed_Data_Path="/Users/njain/Desktop/MPI/$DatasetName"
+    Raw_Data_Path="/Users/njain/Desktop/$DatasetName"
+    Analysed_Data_Path="/Users/njain/Desktop/MPI/$DatasetName"
     
     CHECK_FILE_EXISTENCE $Analysed_Data_Path
    
@@ -65,6 +65,9 @@ for datasets in "${indices[@]}"; do
             
             if echo "$SequenceName" | grep -q "$word_to_check"; then
                 echo "This data is acquired using '$word_to_check'. This will not be analyzed."
+
+            elif echo "$SequenceName" | grep -q "FieldMap";then
+                echo "Bo Map located"
 
             else
                 echo "This data is not acquired using $word_to_check"
