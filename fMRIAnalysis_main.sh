@@ -66,8 +66,9 @@ for datasets in "${indices[@]}"; do
             if echo "$SequenceName" | grep -q "$word_to_check"; then
                 echo "This data is acquired using '$word_to_check'. This will not be analyzed."
 
-            elif echo "$SequenceName" | grep -q "FieldMap";then
-                echo "Bo Map located"
+            # elif echo "$SequenceName" | grep -q "FieldMap";then
+            #     echo "Bo Map located"
+            #     echo "To be used for Phase Mapping"
 
             else
                 echo "This data is not acquired using $word_to_check"
