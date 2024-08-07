@@ -81,7 +81,7 @@ for datasets in "${indices[@]}"; do
                 
                 # 07.08.2024 Estimating Volume TR
                 VolTR=$(echo "scale=2; $TotalScanTime/$NoOfRepetitions" | bc)
-
+               
                 if [ "$NoOfRepetitions" == "1" ]; then
                     echo "It is a Structural Scan acquired using $SequenceName"
                 else 
