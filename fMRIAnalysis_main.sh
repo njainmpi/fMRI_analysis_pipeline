@@ -76,8 +76,12 @@ for datasets in "${indices[@]}"; do
                 BRUKER_to_NIFTI $Raw_Data_Path $runnames $Raw_Data_Path/$runnames/method
 
                 NoOfRepetitions=$(awk '/PVM_NRepetitions=/ {print substr($0,21,3)}' $Raw_Data_Path_Run/method)
+                TotalScanTime=$(awk '/PVM_ScanTime=/ {print substr($0,17,6)}' $Raw_Data_Path_Run/method)
                 #here the awk will look at the number of slices acquired using the information located in the methods file    
                 
+                # 07.08.2024 Estimating Volume TR
+                VolTR=$(echo "scale=2; $TotalScanTime/$NoOfRepetitions" | bc)
+
                 if [ "$NoOfRepetitions" == "1" ]; then
                     echo "It is a Structural Scan acquired using $SequenceName"
                 else 
@@ -108,7 +112,7 @@ for datasets in "${indices[@]}"; do
                 
                             CHECK_FILE_EXISTENCE TimeSeiesVoxels
                 
-                            CREATING_3_COLUMNS $NoOfEpochs $Baseline_TRs $BlockLength 3
+                            CREATING_3_COLUMNS $NoOfEpochs $Baseline_TRs $BlockLength $VolTR
 
                         # fsleyes rG1_fsl_mean.nii.gz
                         # fsl_glm -i sG1_fsl.nii.gz -m rG1_fsl_mean.nii.gz -d ~/Desktop/$SequenceName.txt -o betamap --des_norm --dat_norm --demean --out_p=pmap_sm --out_z=zmap_sm
