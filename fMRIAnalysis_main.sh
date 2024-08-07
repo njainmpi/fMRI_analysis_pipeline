@@ -11,7 +11,7 @@ source ./folder_existence_function.sh
 source ./motion_correction_function.sh
 source ./temporal_SNR_spikes_smoothing_function.sh
 source ./time_series_function.sh
-
+time_series="/Users/njain/Desktop/Github/fMRI_analysis_pipeline/PlottingTimeSeries.py"
 
 # chmod +x ./Functions_Bash/*
 
@@ -113,6 +113,20 @@ for datasets in "${indices[@]}"; do
                         # fsleyes rG1_fsl_mean.nii.gz
                         # fsl_glm -i sG1_fsl.nii.gz -m rG1_fsl_mean.nii.gz -d ~/Desktop/$SequenceName.txt -o betamap --des_norm --dat_norm --demean --out_p=pmap_sm --out_z=zmap_sm
                         # fsl_glm -i sG1_fsl.nii.gz -d ~/Desktop/$SequenceName.txt -o betamap --des_norm --dat_norm --demean --out_p=pmap_sm --out_z=zmap_sm_withoutmask
+
+                        #07.08.2024: Adding a loop to estimate Time Courses
+                            
+
+                            if [[ ! -f *_roi.nii.gz ]]; then
+                                for regions in *_roi*; do
+                                    region_interest="${regions%.nii.gz}"
+                                    fslmeants -i rG1_fsl.nii.gz -m $regions -o $region_interest.txt
+                                    python $time_series $region_interest.txt
+                                done
+                            else
+                                fsleyes rG1_fsl_mean.nii.gz
+                                echo "You need to mark your ROIs and analyse later"
+                            fi
 
                     # TIME_SERIES $Analysed_Data_Path/$runnames''$SequenceName/NIFTI_file_header_info.txt
             
