@@ -116,7 +116,7 @@ for datasets in "${indices[@]}"; do
 
                         #07.08.2024: Adding a loop to estimate Time Courses
                             
-
+                            
                             if [[ ! -f *_roi.nii.gz ]]; then
                                 for regions in *_roi*; do
                                     region_interest="${regions%.nii.gz}"
@@ -127,6 +127,7 @@ for datasets in "${indices[@]}"; do
                                 fsleyes rG1_fsl_mean.nii.gz
                                 echo "You need to mark your ROIs and analyse later"
                             fi
+                            
 
                     # TIME_SERIES $Analysed_Data_Path/$runnames''$SequenceName/NIFTI_file_header_info.txt
             
