@@ -11,6 +11,7 @@ source ./folder_existence_function.sh
 source ./motion_correction_function.sh
 source ./temporal_SNR_spikes_smoothing_function.sh
 source ./time_series_function.sh
+source ./outlier_count.sh #14.08.2024 new function to perfom slice timing correction and outlier estimate before and after slice timing correction
 time_series="/Users/njain/Desktop/Github/fMRI_analysis_pipeline/PlottingTimeSeries.py"
 
 # chmod +x ./Functions_Bash/*
@@ -28,11 +29,11 @@ for datasets in "${indices[@]}"; do
     echo "Dataset Currently Being Analysed is": $DatasetName
 
     #Locate the source of Raw Data on the server, this needs to be changed by the user based on the paths defined in their system#
-    # Raw_Data_Path="/Volumes/pr_ohlendorf/fMRI/Project1_CBV_fMRI_NJ/RawData/$DatasetName"
-    # Analysed_Data_Path="/Volumes/pr_ohlendorf/fMRI/Project1_CBV_fMRI_NJ/AnalysedData/$DatasetName"
+    Raw_Data_Path="/Volumes/pr_ohlendorf/fMRI/Project1_CBV_fMRI_NJ/RawData/$DatasetName"
+    Analysed_Data_Path="/Volumes/pr_ohlendorf/fMRI/Project1_CBV_fMRI_NJ/AnalysedData/$DatasetName"
   
-    Raw_Data_Path="/Users/njain/Desktop/$DatasetName"
-    Analysed_Data_Path="/Users/njain/Desktop/MPI/$DatasetName"
+    # Raw_Data_Path="/Users/njain/Desktop/$DatasetName"
+    # Analysed_Data_Path="/Users/njain/Desktop/MPI/$DatasetName"
     
     CHECK_FILE_EXISTENCE $Analysed_Data_Path
    
@@ -80,8 +81,9 @@ for datasets in "${indices[@]}"; do
                 #here the awk will look at the number of slices acquired using the information located in the methods file    
                 
                 # 07.08.2024 Estimating Volume TR
-                VolTR=$(echo "scale=2; $TotalScanTime/$NoOfRepetitions" | bc)
-               
+                VolTR_msec=$(echo "scale=0; $TotalScanTime/$NoOfRepetitions" | bc)
+                VolTR=$(echo "scale=0; $VolTR_msec/1000" | bc)
+
                 if [ "$NoOfRepetitions" == "1" ]; then
                     echo "It is a Structural Scan acquired using $SequenceName"
                 else 
@@ -101,7 +103,8 @@ for datasets in "${indices[@]}"; do
                     
                         BlockLength=$(($StimOn_TRs + $StimOff_TRs))
                         MiddleVolume=$(($NoOfRepetitions / 2))
-                
+                        
+                        SLICE_TIMING_CORRECTION G1_cp.nii.gz
                         MOTION_CORRECTION $MiddleVolume G1_cp.nii.gz
                         CHECK_SPIKES rG1_fsl.nii.gz
 
@@ -114,23 +117,26 @@ for datasets in "${indices[@]}"; do
                 
                             CREATING_3_COLUMNS $NoOfEpochs $Baseline_TRs $BlockLength $VolTR
 
-                        # fsleyes rG1_fsl_mean.nii.gz
-                        # fsl_glm -i sG1_fsl.nii.gz -m rG1_fsl_mean.nii.gz -d ~/Desktop/$SequenceName.txt -o betamap --des_norm --dat_norm --demean --out_p=pmap_sm --out_z=zmap_sm
-                        # fsl_glm -i sG1_fsl.nii.gz -d ~/Desktop/$SequenceName.txt -o betamap --des_norm --dat_norm --demean --out_p=pmap_sm --out_z=zmap_sm_withoutmask
+                        # # fsleyes rG1_fsl_mean.nii.gz
+                        #  fsl_glm -i sG1_fsl.nii.gz -m rG1_fsl_mean.nii.gz -d ~/Desktop/$SequenceName.txt -o betamap --demean --out_p=pmap_sm --out_z=zmap_sm
+                        # # fsl_glm -i sG1_fsl.nii.gz -m rG1_fsl_mean.nii.gz -d ~/Desktop/$SequenceName.txt -o betamap --des_norm --dat_norm --demean --out_p=pmap_sm --out_z=zmap_sm
+                        # # fsl_glm -i sG1_fsl.nii.gz -d ~/Desktop/$SequenceName.txt -o betamap --des_norm --dat_norm --demean --out_p=pmap_sm --out_z=zmap_sm_withoutmask
+                        #   fsl_glm -i sG1_fsl.nii.gz -m rG1_fsl_mean_mask.nii.gz -d design_3.mat -c design_3.con --out_z=3Condition --dat_norm --demean --vn --out_t=3Condition_tstat --out_p=3Condition_p 
+
 
                         #07.08.2024: Adding a loop to estimate Time Courses
                             
                             
-                            if [[ ! -f *_roi.nii.gz ]]; then
-                                for regions in *_roi*; do
-                                    region_interest="${regions%.nii.gz}"
-                                    fslmeants -i rG1_fsl.nii.gz -m $regions -o $region_interest.txt
-                                    python $time_series $region_interest.txt
-                                done
-                            else
-                                fsleyes rG1_fsl_mean.nii.gz
-                                echo "You need to mark your ROIs and analyse later"
-                            fi
+                            # if [[ ! -f *_roi.nii.gz ]]; then
+                            #     for regions in *_roi*; do
+                            #         region_interest="${regions%.nii.gz}"
+                            #         fslmeants -i rG1_fsl.nii.gz -m $regions -o $region_interest.txt
+                            #         python $time_series $region_interest.txt
+                            #     done
+                            # else
+                            #     fsleyes rG1_fsl_mean.nii.gz
+                            #     echo "You need to mark your ROIs and analyse later"
+                            # fi
                             
 
                     # TIME_SERIES $Analysed_Data_Path/$runnames''$SequenceName/NIFTI_file_header_info.txt
