@@ -5,6 +5,9 @@
 
 ##Calling all the functions that will be used in the upcoming script
 
+#31.07.2024 instead of adding run numbers the code picks all the run numbers automatically located in the folder
+#14.08.2024 adding slice timing correction to all the functional scans
+#14.08.2024 assigning tags to the folders if they are structural or functional
 
 source ./data_conversion_function.sh
 source ./folder_existence_function.sh
@@ -66,11 +69,8 @@ for datasets in "${indices[@]}"; do
             
             if echo "$SequenceName" | grep -q "$word_to_check"; then
                 echo "This data is acquired using '$word_to_check'. This will not be analyzed."
-
-            # elif echo "$SequenceName" | grep -q "FieldMap";then
-            #     echo "Bo Map located"
-            #     echo "To be used for Phase Mapping"
-
+                tag -a "Localizer" "$Analysed_Data_Path/$runnames''$SequenceName" #14.08.2024 tagging a folder as localizer
+ 
             else
                 echo "This data is not acquired using $word_to_check"
 
@@ -86,6 +86,7 @@ for datasets in "${indices[@]}"; do
 
                 if [ "$NoOfRepetitions" == "1" ]; then
                     echo "It is a Structural Scan acquired using $SequenceName"
+                    tag -a "Anatomical" "$Analysed_Data_Path/$runnames''$SequenceName" #14.08.2024 tagging a folder as anatomical scan
                 else 
                     echo "It is an fMRI scan"
                     echo  "*************Checking for Test Scan or Functional Scan*************"
@@ -110,6 +111,7 @@ for datasets in "${indices[@]}"; do
 
                         if [ $TaskDuration == $NoOfRepetitions ]; then
                             echo "It is Stimulated Scan with a total of $NoOfRepetitions Repetitions"
+                            tag -a "Functional" "$Analysed_Data_Path/$runnames''$SequenceName" #14.08.2024 tagging a folder as functional scan 
                             TEMPORAL_SNR rG1_fsl.nii.gz
                             SMOOTHING $Raw_Data_Path/$runnames/method
                 
