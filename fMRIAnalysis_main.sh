@@ -9,10 +9,10 @@
 #14.08.2024 adding slice timing correction to all the functional scans
 #14.08.2024 assigning tags to the folders if they are structural or functional
 
-source ./data_conversion_function.sh
-source ./folder_existence_function.sh
-source ./motion_correction_function.sh
-source ./temporal_SNR_spikes_smoothing_function.sh
+source ./data_conversion_function.sh #converting data from either Bruker or Dicom format to NIFTI format
+source ./folder_existence_function.sh #check if folder is present or not
+source ./motion_correction_function.sh #perform motion correction using AFNI
+source ./temporal_SNR_spikes_smoothing_function.sh #check presence of spikes, peforms smoothing using either AFNI or NIFTI, caclulates temporal SNR
 source ./time_series_function.sh
 source ./outlier_count.sh #14.08.2024 new function to perfom slice timing correction and outlier estimate before and after slice timing correction
 time_series="/Users/njain/Desktop/Github/fMRI_analysis_pipeline/PlottingTimeSeries.py"
