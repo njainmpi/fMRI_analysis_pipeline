@@ -32,11 +32,11 @@ for datasets in "${indices[@]}"; do
     echo "Dataset Currently Being Analysed is": $DatasetName
 
     #Locate the source of Raw Data on the server, this needs to be changed by the user based on the paths defined in their system#
-    Raw_Data_Path="/Volumes/pr_ohlendorf/fMRI/Project1_CBV_fMRI_NJ/RawData/$DatasetName"
-    Analysed_Data_Path="/Volumes/pr_ohlendorf/fMRI/Project1_CBV_fMRI_NJ/AnalysedData/$DatasetName"
+    # Raw_Data_Path="/Volumes/pr_ohlendorf/fMRI/Project1_CBV_fMRI_NJ/RawData/$DatasetName"
+    # Analysed_Data_Path="/Volumes/pr_ohlendorf/fMRI/Project1_CBV_fMRI_NJ/AnalysedData/$DatasetName"
   
-    # Raw_Data_Path="/Users/njain/Desktop/$DatasetName"
-    # Analysed_Data_Path="/Users/njain/Desktop/MPI/$DatasetName"
+    Raw_Data_Path="/Users/njain/Desktop/$DatasetName"
+    Analysed_Data_Path="/Users/njain/Desktop/MPI/$DatasetName"
     
     CHECK_FILE_EXISTENCE $Analysed_Data_Path
    
@@ -106,7 +106,7 @@ for datasets in "${indices[@]}"; do
                         MiddleVolume=$(($NoOfRepetitions / 2))
                         
                         SLICE_TIMING_CORRECTION G1_cp.nii.gz
-                        MOTION_CORRECTION $MiddleVolume G1_cp.nii.gz
+                        MOTION_CORRECTION $MiddleVolume stc_func+orig.BRIK
                         CHECK_SPIKES rG1_fsl.nii.gz
 
                         if [ $TaskDuration == $NoOfRepetitions ]; then
