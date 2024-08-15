@@ -105,16 +105,16 @@ for datasets in "${indices[@]}"; do
                         BlockLength=$(($StimOn_TRs + $StimOff_TRs))
                         MiddleVolume=$(($NoOfRepetitions / 2))
                         
-                        SLICE_TIMING_CORRECTION G1_cp.nii.gz
+                        SLICE_TIMING_CORRECTION G1_cp.nii.gz #15.08.2024 updated to perform slice timing correction
                         MOTION_CORRECTION $MiddleVolume stc_func+orig.BRIK
-                        CHECK_SPIKES rG1_fsl.nii.gz
+                        CHECK_SPIKES mc_stc_func+orig
 
                         if [ $TaskDuration == $NoOfRepetitions ]; then
                             echo "It is Stimulated Scan with a total of $NoOfRepetitions Repetitions"
                             tag -a "Functional" "$Analysed_Data_Path/$runnames''$SequenceName" #14.08.2024 tagging a folder as functional scan 
-                            TEMPORAL_SNR rG1_fsl.nii.gz
-                            SMOOTHING $Raw_Data_Path/$runnames/method
-                
+                            TEMPORAL_SNR_using_AFNI mc_stc_func+orig
+                            SMOOTHING_using_AFNI mc_stc_func+orig
+                                            
                             CHECK_FILE_EXISTENCE TimeSeiesVoxels
                 
                             CREATING_3_COLUMNS $NoOfEpochs $Baseline_TRs $BlockLength $VolTR
