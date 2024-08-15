@@ -29,10 +29,10 @@ SLICE_TIMING_CORRECTION () {
 
 # prefix stc is for slice timing corrected image
   
-    3dTshift -tzero 0 -Fourier -prefix stc_interp rG1_fsl.nii.gz 
-    3dAFNItoNIFTI stc_interp+orig.BRIK 
+    3dTshift -tzero 0 -Fourier -prefix stc_func $1 
+    3dAFNItoNIFTI stc_func+orig.BRIK 
 
-    3dToutcount -automask -fraction -polort 3 -legendre stc_interp+orig.BRIK  > stc_outlier_count.1D
+    3dToutcount -automask -fraction -polort 3 -legendre stc_func+orig.BRIK > stc_outlier_count.1D
     1Dplot -pnm stc_outcount_file -DAFNI_1DPLOT_IMSIZE=8192 -xlabel 'Repetition' -ylabel 'Fraction of outliers' stc_outlier_count.1D
     sips -s format png stc_outcount_file.pnm --out stc_outlier_count.png
 
