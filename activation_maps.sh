@@ -8,6 +8,20 @@
 #   points longinformation comes from the method file .  3dDeconvolve
 #   is used to generate the activation map.  There is one visual stimuli.
 
+STIMULUS_TIMING_CREATION () {
+  Total_Epochs_For_Indexing_Purpose=$(($1 - 1)) #$1 is the total no of epochs, $2 is the no of baseline stimulation TRs, $3 is the total length of an epoch, $4 is the Volume TR
+  Total_Epochs_For_Indexing_Purpose=6
+  offset=$3
+       for BlockNumber in $(seq 0 1 $Total_Epochs_For_Indexing_Purpose); do
+           result=$(( ($2 * $BlockNumber) + offset )) # $2 is the block length
+           echo -n "$result " >> "stimulus_times.txt"
+       done
+}
+
+
+
+
+
 ACTIVATION_MAPS () {
 
 3dDeconvolve -input $1 \
