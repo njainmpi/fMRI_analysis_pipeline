@@ -14,19 +14,17 @@ STIMULUS_TIMING_CREATION () {
   offset=$3
        for BlockNumber in $(seq 0 1 $Total_Epochs_For_Indexing_Purpose); do
            result=$(( ($2 * $BlockNumber) + offset )) # $2 is the block length
-           echo -n "$result " >> "stimulus_times.txt"
+           echo "$result " >> "stimulus_times.txt"
        done
 }
 
 
 
-
-
 ACTIVATION_MAPS () {
-
+Blo
 3dDeconvolve -input $1 \
              -num_stimts 1 \
-             -stim_times 1 $2 'BLOCK($3,1)' \
+             -stim_times 1 $2 'BLOCK(6,1)' \
              -stim_label 1 Stimulus \
              -fout -tout \
              -bucket stats_sm_mc_stc_func \
