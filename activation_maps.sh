@@ -8,60 +8,35 @@
 #   points longinformation comes from the method file .  3dDeconvolve
 #   is used to generate the activation map.  There is one visual stimuli.
 
-  3dDeconvolve -x1D xout_short_two.1D -input sG1_fsl.nii.gz   \
-      -num_stimts 1                                                   \
-      -stim_file 1 test.txt        -stim_label 1 Somatosensory_Cortex \
-      -mask rG1_fsl_mean_mask.nii.gz                                  \
-      -full_first -fout -tout                                         \
-      -bucket func_ht2_short_two -cbucket cbuc_ht2_short_two
+ACTIVATION_MAPS () {
 
-  N.B.: You may want to de-spike, smooth, and register the 3D+time
-        dataset prior to the analysis (as usual).  These steps are not
-        shown here -- I'm presuming you know how to use AFNI already.
+3dDeconvolve -input $1 \
+             -num_stimts 1 \
+             -stim_times 1 $2 'BLOCK($3,1)' \
+             -stim_label 1 Stimulus \
+             -fout -tout \
+             -bucket stats_sm_mc_stc_func \
+             -cbucket coefficients_sm_mc_stc_func
 
-** Step 2: Create a mask of highly activated voxels.
-  The F statistic threshold is set to 30, corresponding to a voxel-wise
-  p = 1e-12 = very significant.  The mask is also lightly clustered, and
-  restricted to brain voxels.
+}
 
-  3dAutomask -prefix Amask rall_vr+orig
-  3dcalc -a 'func_ht2_short+orig[0]' -b Amask+orig -datum byte \
-         -nscale -expr 'step(a-30)*b' -prefix STmask300
-  3dmerge -dxyz=1 -1clust 1.1 5 -prefix STmask300c STmask300+orig
+# Explanation of the Parameters
 
-** Step 3: Run 3dInvFMRI to estimate the stimulus functions in run #4.
-  Run #4 is time points 324..431 of the 3D+time dataset (the -data
-  input below).  The -map input is the beta weights extracted from
-  the -cbucket output of 3dDeconvolve.
+# -input $1: Specifies your fMRI data file.
+# -num_stimts 1: Indicates that there is one stimulus timing file.
+# -stim_times 1 $2 'BLOCK(6,1)':
+#      1 is the stimulus index.
+#      $2 is the file containing the stimulus onset times.
+#      'BLOCK($3,1)' models the hemodynamic response with a block design, where each stimulus lasts for 'n' seconds.
+# -stim_label 1 Stimulus: Labels this stimulus as "Stimulus."
+# -fout -tout: Outputs the F-statistics and t-statistics for the regressor.
+# -bucket stats_output_subject1: Specifies the output file for statistical results.
+# -cbucket coefficients_output_subject1: Specifies the output file for beta coefficients.
+ 
 
-  3dInvFMRI -mask STmask300c+orig                       \
-            -data rall_vr+orig'[324..431]'              \
-            -map cbuc_ht2_short_two+orig'[6..7]'        \
-            -polort 1 -alpha 0.01 -median5 -method K    \
-            -out ii300K_short_two.1D
+# Running the Command
+# Copy and paste the command into your terminal where AFNI is installed and execute it. This will produce statistical maps (stats_output_subject1) and coefficient maps (coefficients_output_subject1).
 
-  3dInvFMRI -mask STmask300c+orig                       \
-            -data rall_vr+orig'[324..431]'              \
-            -map cbuc_ht2_short_two+orig'[6..7]'        \
-            -polort 1 -alpha 0.01 -median5 -method C    \
-            -out ii300C_short_two.1D
-
-** Step 4: Plot the results, and get confused.
-
-  1dplot -ynames VV KK CC -xlabel Run#4 -ylabel ComplexStim \
-         hrf_complex.1D'{324..432}'                         \
-         ii300K_short_two.1D'[0]'                           \
-         ii300C_short_two.1D'[0]'
-
-  1dplot -ynames VV KK CC -xlabel Run#4 -ylabel SimpleStim \
-         hrf_simple.1D'{324..432}'                         \
-         ii300K_short_two.1D'[1]'                          \
-         ii300C_short_two.1D'[1]'
-
-  N.B.: I've found that method K works better if MORE voxels are
-        included in the mask (lower threshold) and method C if
-        FEWER voxels are included.  The above threshold gave 945
-        voxels being used to determine the 2 output time series.
-=========================================================================
-
-++ Compile date = Jul 16 2024 {AFNI_24.2.01:linux_ubuntu_16_64}
+# Interpreting the Output
+# stats_sm_mc_stc_func+orig.BRIK/HEAD: This will contain F-statistics and t-statistics maps that show the significance of the activation at each voxel.
+# stats_sm_mc_stc_func+orig.BRIK/HEAD: This file will contain the beta coefficients, representing the amplitude of the response at each voxel.
