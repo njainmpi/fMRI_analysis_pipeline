@@ -18,13 +18,13 @@ STIMULUS_TIMING_CREATION () {
        done
 }
 
-
-
 ACTIVATION_MAPS () {
-Blo
-3dDeconvolve -input $1 \
+
+       local block_duration=$3
+       echo $block_durations
+       3dDeconvolve -input $1 \
              -num_stimts 1 \
-             -stim_times 1 $2 'BLOCK(6,1)' \
+             -stim_times 1 $2 "BLOCK(${block_duration},1)" \
              -stim_label 1 Stimulus \
              -fout -tout \
              -bucket stats_sm_mc_stc_func \
