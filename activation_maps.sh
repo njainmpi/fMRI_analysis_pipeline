@@ -2,7 +2,7 @@
 
 
 #07th August 2024: $$Naman Jain$$ This function is created get activation maps using AFNI through CLI
-
+#17th August 2024: $$Naman Jain$$ Creating Signal change maps
 # ** Step 1: From a training dataset, generate activation map.
 #   The input dataset has 1 runs, each variable and the time 
 #   points longinformation comes from the method file .  3dDeconvolve
@@ -53,7 +53,7 @@ ACTIVATION_MAPS () {
 # stats_sm_mc_stc_func+orig.BRIK/HEAD: This will contain F-statistics and t-statistics maps that show the significance of the activation at each voxel.
 # stats_sm_mc_stc_func+orig.BRIK/HEAD: This file will contain the beta coefficients, representing the amplitude of the response at each voxel.
 
-SINGAL_CHANGE_MAPS () {
+SIGNAL_CHANGE_MAPS () {
 
   3dTstat -mean -prefix mean_baseline $1[0..9]
 
