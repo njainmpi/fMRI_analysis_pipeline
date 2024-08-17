@@ -20,17 +20,18 @@ TIME_SERIES_VOXEL () {
         for phase in $(seq 1 1 $PhaseDim); do 
             for read in $(seq 1 1 $ReadDim); do 
                 fslmeants -i rG1_fsl.nii.gz -o $read'_'$phase'_'$slice.txt -c $read $phase $slice;
-                # python3 $PATH_INIT/ScriptsforDataAnalysis/PlottingTimeSeries_v1.py $read'_'$phase'_'$slice.txt $PATH_INIT/TasksGLM/3col_$NoOfRepetitions.txt $Rows $Cols  
+                python $time_series $read'_'$phase'_'$slice.txt $PATH_INIT/TasksGLM/3col_$NoOfRepetitions.txt $Rows $Cols  
             done
         done
     done
 
 }
 
-#Function 2
+#Function 3
 TIME_SERIES () {
 
     fslmeants -i $1 -m $2 -o $2 # First value is the name of the input file, second value is the mask, third value is the name of the output file, fourth value is the path of the python script to analyse data. 
     python3 $4 $2 activation_times.txt $5 $Total_Epochs_For_Indexing_Purpose  $5 #fifth value is the block length i.e. no of rows in one block
     
 }
+
