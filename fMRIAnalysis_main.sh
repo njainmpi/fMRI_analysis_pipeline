@@ -115,8 +115,8 @@ for datasets in "${indices[@]}"; do
                             tag -a "Functional" "$Analysed_Data_Path/$runnames''$SequenceName" #14.08.2024 tagging a folder as functional scan 
                             TEMPORAL_SNR_using_AFNI mc_stc_func+orig
                             SMOOTHING_using_AFNI mc_stc_func+orig
-                            STIMULUS_TIMING_CREATION $NoOfEpochs $BlockLength $Baseline_TRs #16.08.2024 creating epoch times
-                            ACTIVATION_MAPS sm_mc_stc_func+orig stimulus_times.txt 6 #16.08.2024 adding a function to estimate activation maps from the data      
+                            STIMULUS_TIMING_CREATION $NoOfEpochs $BlockLength $Baseline_TRs stimulus_times.txt #16.08.2024 creating epoch times
+                            ACTIVATION_MAPS sm_mc_stc_func+orig stimulus_times.txt 16 stats_offset_sm_mc_stc_func #16.08.2024 adding a function to estimate activation maps from the data      
                             
                             CHECK_FILE_EXISTENCE TimeSeiesVoxels
                 
