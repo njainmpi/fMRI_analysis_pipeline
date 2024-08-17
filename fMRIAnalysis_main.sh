@@ -116,28 +116,13 @@ for datasets in "${indices[@]}"; do
                             TEMPORAL_SNR_using_AFNI mc_stc_func+orig
                             SMOOTHING_using_AFNI mc_stc_func+orig
                             STIMULUS_TIMING_CREATION $NoOfEpochs $BlockLength $Baseline_TRs stimulus_times.txt #16.08.2024 creating epoch times
-                            ACTIVATION_MAPS sm_mc_stc_func+orig stimulus_times.txt 16 stats_offset_sm_mc_stc_func #16.08.2024 adding a function to estimate activation maps from the data      
+                            ACTIVATION_MAPS sm_mc_stc_func+orig stimulus_times.txt 6 stats_offset_sm_mc_stc_func #16.08.2024 adding a function to estimate activation maps from the data      
                             
                             CHECK_FILE_EXISTENCE TimeSeiesVoxels
                 
                             CREATING_3_COLUMNS $NoOfEpochs $Baseline_TRs $BlockLength $VolTR
 
-                        #07.08.2024: Adding a loop to estimate Time Courses
-                            
-                            
-                            # if [[ ! -f *_roi.nii.gz ]]; then
-                            #     for regions in *_roi*; do
-                            #         region_interest="${regions%.nii.gz}"
-                            #         fslmeants -i rG1_fsl.nii.gz -m $regions -o $region_interest.txt
-                            #         python $time_series $region_interest.txt
-                            #     done
-                            # else
-                            #     fsleyes rG1_fsl_mean.nii.gz
-                            #     echo "You need to mark your ROIs and analyse later"
-                            # fi
-                            
-
-                    # TIME_SERIES $Analysed_Data_Path/$runnames''$SequenceName/NIFTI_file_header_info.txt
+                            # TIME_SERIES $Analysed_Data_Path/$runnames''$SequenceName/NIFTI_file_header_info.txt
             
                         else
                             echo "It is a Baseline Scan with a total of $NoOfRepetitions Repetitions"
