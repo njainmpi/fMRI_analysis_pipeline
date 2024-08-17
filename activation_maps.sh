@@ -52,3 +52,9 @@ ACTIVATION_MAPS () {
 # Interpreting the Output
 # stats_sm_mc_stc_func+orig.BRIK/HEAD: This will contain F-statistics and t-statistics maps that show the significance of the activation at each voxel.
 # stats_sm_mc_stc_func+orig.BRIK/HEAD: This file will contain the beta coefficients, representing the amplitude of the response at each voxel.
+
+SINGAL_CHANGE_MAPS () {
+
+  3dTstat -mean -prefix mean_baseline $1[0..9]
+
+}

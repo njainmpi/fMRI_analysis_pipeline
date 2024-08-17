@@ -117,6 +117,7 @@ for datasets in "${indices[@]}"; do
                             SMOOTHING_using_AFNI mc_stc_func+orig
                             STIMULUS_TIMING_CREATION $NoOfEpochs $BlockLength $Baseline_TRs stimulus_times.txt #16.08.2024 creating epoch times
                             ACTIVATION_MAPS sm_mc_stc_func+orig stimulus_times.txt 6 stats_offset_sm_mc_stc_func #16.08.2024 adding a function to estimate activation maps from the data      
+                            SIGNAL_CHANGE_MAPS mc_stc_func+orig
                             
                             CHECK_FILE_EXISTENCE TimeSeiesVoxels
                 
