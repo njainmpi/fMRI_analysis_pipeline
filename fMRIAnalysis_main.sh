@@ -122,10 +122,11 @@ for datasets in "${indices[@]}"; do
                         STIMULUS_TIMING_CREATION $NoOfEpochs $BlockLength $Baseline_TRs stimulus_times.txt #16.08.2024 creating epoch times
                         ACTIVATION_MAPS sm_mc_stc_func+orig stimulus_times.txt 6 stats_offset_sm_mc_stc_func #16.08.2024 adding a function to estimate activation maps from the data      
                             
-                        CHECK_FILE_EXISTENCE signal_change_map
-                        cd signal_change_map
+                        CHECK_FILE_EXISTENCE Signal_Change_Map
+                        cd Signal_Change_Map
                         SIGNAL_CHANGE_MAPS ../sm_mc_stc_func+orig $NoOfRepetitions # 17.08.2024 creating signal change maps
                         cd ..
+                        cp Signal_Change_Map/signal_change_map+orig* .
 
                         CHECK_FILE_EXISTENCE TimeSeiesVoxels
                 
