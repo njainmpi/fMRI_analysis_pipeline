@@ -9,7 +9,9 @@
 CHECK_FILE_EXISTENCE () {
         if [ -d $1 ]; then
             echo "Analysed Data folder exists, Proceeding to Analyse the data"
+            return 1
         else 
             mkdir $1
+            return 0
     fi
 }
