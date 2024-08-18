@@ -57,4 +57,20 @@ SIGNAL_CHANGE_MAPS () {
 
   3dTstat -mean -prefix mean_baseline $1[0..9]
 
+  # Loop to compute the mean of every 5 images from 11 to 140
+  for i in $(seq 10 5 135); do
+    end=$((i+4))  # Define the end index for the 5 images
+    output_prefix="mean_${i}_to_${end}"
+    3dTstat -mean -prefix ${output_prefix} $1[${i}..${end}]
+  done
+
 }
+
+
+
+# mean_first10.nii: The mean image from the first 10 images (indices 0 to 9).
+# Loop: The loop starts at the 11th image (index 10) and increments by 5 until the 136th image (index 135).
+# For each step in the loop:
+# i: The starting index of the current 5-image block.
+# end: The ending index of the current 5-image block.
+# output_prefix: The output file name for the mean of the current block of 5 images.
