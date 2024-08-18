@@ -135,7 +135,7 @@ for datasets in "${indices[@]}"; do
             
                     else
                         echo "It is a Baseline Scan with a total of $NoOfRepetitions Repetitions"
-                        TEMPORAL_SNR rG1_fsl.nii.gz
+                        # TEMPORAL_SNR rG1_fsl.nii.gz
                         SMOOTHING $Raw_Data_Path/$runnames/method
                     fi
                 
