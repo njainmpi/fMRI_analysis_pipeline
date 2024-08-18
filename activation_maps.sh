@@ -68,8 +68,6 @@ SIGNAL_CHANGE_MAPS () {
     rm -f *ratio*
   done
 
-
-
 }
 
 
