@@ -58,11 +58,17 @@ SIGNAL_CHANGE_MAPS () {
   3dTstat -mean -prefix mean_baseline $1[0..9]
 
   # Loop to compute the mean of every 5 images from 11 to 140
-  for i in $(seq 10 5 135); do
+  for i in $(seq 10 5 $(($2 - 4))); do
     end=$((i+4))  # Define the end index for the 5 images
     output_prefix="mean_${i}_to_${end}"
     3dTstat -mean -prefix ${output_prefix} $1[${i}..${end}]
+    3dcalc -a ${output_prefix}+orig -b mean_baseline+orig -expr 'a-b' -prefix ${output_prefix}_sig_change
+    3dcalc -a ${output_prefix}_sig_change+orig -b mean_baseline+orig -expr 'a/b' -prefix ${output_prefix}_ratio_sc
+    3dcalc -a ${output_prefix}_ratio_sc+orig -expr 'a*100' -prefix ${output_prefix}_percent_sc
+    rm -f *ratio*
   done
+
+
 
 }
 
