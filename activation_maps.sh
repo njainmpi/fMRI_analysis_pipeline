@@ -56,6 +56,7 @@ ACTIVATION_MAPS () {
 SIGNAL_CHANGE_MAPS () {
 
   3dTstat -mean -prefix mean_baseline $1[0..9]
+  file_list=""
 
   # Loop to compute the mean of every 5 images from 11 to 140
   for i in $(seq 10 5 $(($2 - 4))); do
@@ -65,10 +66,17 @@ SIGNAL_CHANGE_MAPS () {
     3dcalc -a ${output_prefix}+orig -b mean_baseline+orig -expr 'a-b' -prefix ${output_prefix}_sig_change
     3dcalc -a ${output_prefix}_sig_change+orig -b mean_baseline+orig -expr 'a/b' -prefix ${output_prefix}_ratio_sc
     3dcalc -a ${output_prefix}_ratio_sc+orig -expr 'a*100' -prefix ${output_prefix}_percent_sc
+    file_list="${file_list} ${output_prefix}_percent_sc+orig"
+    
     rm -f *ratio*
   done
 
+echo $file_list
+# Use 3dTcat to merge all files into one
+3dTcat -prefix signal_change_map $file_list
 }
+
+
 
 
 
