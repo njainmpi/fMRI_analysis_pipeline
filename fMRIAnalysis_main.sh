@@ -16,6 +16,7 @@ source ./temporal_SNR_spikes_smoothing_function.sh #check presence of spikes, pe
 source ./time_series_function.sh
 source ./activation_maps.sh # to map areas of activation using AFNI, also generates signal change maps
 source ./outlier_count.sh #14.08.2024 new function to perfom slice timing correction and outlier estimate before and after slice timing correction
+source ./video_making.sh #19.08.2024 new function to make videos of the signal change maps
 time_series="/Users/njain/Desktop/Github/fMRI_analysis_pipeline/PlottingTimeSeries.py"
 
 # chmod +x ./Functions_Bash/*
