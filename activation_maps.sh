@@ -3,6 +3,8 @@
 
 #07th August 2024: $$Naman Jain$$ This function is created get activation maps using AFNI through CLI
 #17th August 2024: $$Naman Jain$$ Creating Signal change maps
+#19th August 2024: $$Naman Jain$$ Adding a function for threhsholding images
+
 # ** Step 1: From a training dataset, generate activation map.
 #   The input dataset has 1 runs, each variable and the time 
 #   points longinformation comes from the method file .  3dDeconvolve
@@ -20,15 +22,15 @@ STIMULUS_TIMING_CREATION () {
 
 ACTIVATION_MAPS () {
 
-       local block_duration=$3
-       echo $block_durations
-       3dDeconvolve -input $1 \
-             -num_stimts 1 \
-             -stim_times 1 $2 "BLOCK(${block_duration},1)" \
-             -stim_label 1 Stimulus \
-             -fout -tout \
-             -bucket $4 \
-             -cbucket coefficients_sm_mc_stc_func
+      local block_duration=$3
+      3dDeconvolve -input $1 \
+            -automask \
+            -num_stimts 1 \
+            -stim_times 1 $2 "BLOCK(${block_duration},1)" \
+            -stim_label 1 Stimulus \
+            -fout -tout \
+            -bucket $4 \
+            -cbucket coefficients_sm_mc_stc_func
 
 }
 
@@ -76,13 +78,26 @@ echo $file_list
 3dTcat -prefix signal_change_map $file_list
 }
 
-
-
-
-
 # mean_first10.nii: The mean image from the first 10 images (indices 0 to 9).
 # Loop: The loop starts at the 11th image (index 10) and increments by 5 until the 136th image (index 135).
 # For each step in the loop:
 # i: The starting index of the current 5-image block.
 # end: The ending index of the current 5-image block.
 # output_prefix: The output file name for the mean of the current block of 5 images.
+
+
+# Function to apply lower and upper thresholds to a dataset
+THRESHOLDING() {
+    local input_dataset=$1    # The input dataset name (e.g., dataset+orig)
+    local lower_thresh=$2     # The lower threshold value
+    local upper_thresh=$3     # The upper threshold value
+    local output_prefix=$4    # The prefix for the output dataset
+
+    # Apply the threshold using 3dcalc
+    3dcalc -a "${input_dataset}" \
+           -expr "a*step(a-${lower_thresh})*step(${upper_thresh}-a)" \
+           -prefix "${output_prefix}"
+}
+
+# Example usage of the function:
+# threshold_dataset "dataset+orig" 0 2.5 5.0 "thresholded_dataset"
