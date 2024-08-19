@@ -16,6 +16,7 @@ TEMPORAL_SNR_using_AFNI () {
     3dTstat -mean -prefix mean_mc_stc_func+orig $1
     3dTstat -stdev -prefix std_mc_stc_func+orig $1
     3dcalc -a mean_mc_stc_func+orig -b std_mc_stc_func+orig -expr 'a/b' -prefix tSNR_mc_stc_func+orig
+    3dAFNItoNIFTI mean_mc_stc_func+orig
 }
 
 #Function 2
