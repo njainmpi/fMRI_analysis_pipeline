@@ -97,6 +97,8 @@ THRESHOLDING() {
     3dcalc -a "${input_dataset}" \
            -expr "a*step(a-${lower_thresh})*step(${upper_thresh}-a)" \
            -prefix "${output_prefix}"
+
+    3dAFNItoNIFTI "${output_prefix}"
 }
 
 # Example usage of the function:
