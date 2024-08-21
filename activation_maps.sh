@@ -24,7 +24,6 @@ ACTIVATION_MAPS () {
 
       local block_duration=$3
       3dDeconvolve -input $1 \
-            -automask \
             -num_stimts 1 \
             -stim_times 1 $2 "BLOCK(${block_duration},1)" \
             -stim_label 1 Stimulus \
