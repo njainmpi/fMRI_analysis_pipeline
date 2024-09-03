@@ -33,5 +33,5 @@ SMOOTHING_using_FSL () {
 
 #Function 4
 SMOOTHING_using_AFNI () {
-    3dmerge -1blur_fwhm 0.2812 -doall -prefix sm_mc_stc_func $1
+    3dmerge -1blur_fwhm 0.4 -doall -prefix sm_mc_stc_func $1
 }
