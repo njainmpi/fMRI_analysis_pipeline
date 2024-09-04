@@ -4,6 +4,7 @@
 #07th August 2024: $$Naman Jain$$ This function is created get activation maps using AFNI through CLI
 #17th August 2024: $$Naman Jain$$ Creating Signal change maps
 #19th August 2024: $$Naman Jain$$ Adding a function for threhsholding images
+#03rd September 2024: $$Naman Jain$$ Making a new function to estimate time courses
 
 # ** Step 1: From a training dataset, generate activation map.
 #   The input dataset has 1 runs, each variable and the time 
@@ -102,3 +103,39 @@ THRESHOLDING() {
 
 # Example usage of the function:
 # threshold_dataset "dataset+orig" 0 2.5 5.0 "thresholded_dataset"
+
+
+TIME_COURSE () {
+
+
+  # Define the input dataset
+  local input_image=$1
+  local starting_point=$2 #because of indexing issues, starting from 0
+  local total_repetitions=$3
+  local epoch_length=$4
+  local no_of_epochs=$5
+
+  # repetitions_for_indexing_purpose=$((total_repetitions - 1))
+  # end_point=$(expr $repetitions_for_indexing_purpose - $(expr $epoch_length - 1))
+  # # Initialize the counter for output files
+  # counter=1
+
+  echo "Starting point is $starting_point"
+  echo "Ending point is $((total_repetitions - 1))"
+ 
+  for i in $(seq 0 $((no_of_epochs - 1))); do
+    # Calculate the starting and ending volumes for this image
+    start_index=$((starting_point + i * epoch_length))
+    end_index=$((start_index + epoch_length - 1))
+    
+    # Create the output file name
+    output_file="image_part$((i + 1))"
+    echo $output_file
+
+
+    # Use 3dTcat to create the new image
+    3dTcat -prefix $output_file $input_image[$start_index..$end_index]
+  done
+
+
+}
