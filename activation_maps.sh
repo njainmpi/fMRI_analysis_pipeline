@@ -138,4 +138,15 @@ TIME_COURSE () {
   done
 
 
+  # List all BRIK files and construct a string of filenames for 3dMean
+  FILES=$(ls image_part*.BRIK)
+
+  # Perform the averaging using 3dMean
+  3dMean -prefix "time_course_averaged" $FILES
+
+  3dAFNItoNIFTI time_course_averaged+orig
+
+  rm -f image_part*
+
+
 }
