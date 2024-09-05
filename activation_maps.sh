@@ -146,7 +146,19 @@ TIME_COURSE () {
 
   3dAFNItoNIFTI time_course_averaged+orig
 
-  rm -f image_part*
+  # rm -f image_part*
+  3dTstat -mean -prefix mean_baseline_time_course $1[0..9]
+  
+  for images in $FILES; do
 
+    var_name=$(echo "$images" | sed 's/+.*//')
+    3dcalc -a ${images} -b mean_baseline_time_course+orig -expr 'a-b' -prefix ${var_name}_sig_diff_from_baseline
+    3dcalc -a ${var_name}_sig_diff_from_baseline+orig -b mean_baseline_time_course+orig -expr 'a/b' -prefix ${var_name}_ratio_sig_diff_from_baseline
+    3dcalc -a ${var_name}_ratio_sig_diff_from_baseline+orig -expr 'a*100' -prefix ${var_name}_PSC
+    rm -f ${var_name}_ratio_sig_diff_from_baseline* ${var_name}_sig_diff_from_baseline*
+  done
+
+  
+  # 3dcalc -a ${output_prefix}+orig -b mean_baseline+orig -expr 'a-b' -prefix ${output_prefix}_sig_change
 
 }
