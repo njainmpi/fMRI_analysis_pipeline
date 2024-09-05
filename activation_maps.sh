@@ -142,23 +142,31 @@ TIME_COURSE () {
   FILES=$(ls image_part*.BRIK)
 
   # Perform the averaging using 3dMean
-  3dMean -prefix "time_course_averaged" $FILES
+  3dMean -prefix "time_course_averaged_raw_signal" $FILES
 
-  3dAFNItoNIFTI time_course_averaged+orig
+  3dAFNItoNIFTI time_course_averaged_raw_signal+orig
 
   # rm -f image_part*
   3dTstat -mean -prefix mean_baseline_time_course $1[0..9]
   
-  for images in $FILES; do
+    base_file="mean_baseline_time_course+orig"
+    image_file="time_course_averaged_raw_signal+orig"
+    n_vols=$epoch_length
+    for ((i=0; i<$n_vols; i++));do
+    
+    # Define the output file name for the result of the subtraction for the current volume
+      output_file=$(printf "result_volume%02d" $i)
+       output_prefix="PSC_${i}"
+    # Subtract base.BRIK from the current volume (sub-brick) using 3dcalc
+      3dcalc -a ${image_file}[$i] -b ${base_file} -expr 'a-b' -prefix ${output_prefix}_base_subtracted
+      3dcalc -a ${output_prefix}_base_subtracted+orig -b ${base_file} -expr 'a-b' -prefix ${output_prefix}_base_divided
+      3dcalc -a ${output_prefix}_base_divided+orig -expr 'a*100' -prefix ${output_prefix}_final_PSC
 
-    var_name=$(echo "$images" | sed 's/+.*//')
-    3dcalc -a ${images} -b mean_baseline_time_course+orig -expr 'a-b' -prefix ${var_name}_sig_diff_from_baseline
-    3dcalc -a ${var_name}_sig_diff_from_baseline+orig -b mean_baseline_time_course+orig -expr 'a/b' -prefix ${var_name}_ratio_sig_diff_from_baseline
-    3dcalc -a ${var_name}_ratio_sig_diff_from_baseline+orig -expr 'a*100' -prefix ${var_name}_PSC
-    rm -f ${var_name}_ratio_sig_diff_from_baseline* ${var_name}_sig_diff_from_baseline*
-  done
+      
+    done
 
+    file_list="${file_list} ${output_prefix}_final_PSC+orig"
+    3dTcat -prefix Time_Course_Averaged $file_list
+    3dAFNItoNIFTI Time_Course_Averaged+orig
   
-  # 3dcalc -a ${output_prefix}+orig -b mean_baseline+orig -expr 'a-b' -prefix ${output_prefix}_sig_change
-
 }
