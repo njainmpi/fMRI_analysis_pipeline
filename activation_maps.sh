@@ -159,7 +159,7 @@ TIME_COURSE () {
        output_prefix="PSC_${i}"
     # Subtract base.BRIK from the current volume (sub-brick) using 3dcalc
       3dcalc -a ${image_file}[$i] -b ${base_file} -expr 'a-b' -prefix ${output_prefix}_base_subtracted
-      3dcalc -a ${output_prefix}_base_subtracted+orig -b ${base_file} -expr 'a-b' -prefix ${output_prefix}_base_divided
+      3dcalc -a ${output_prefix}_base_subtracted+orig -b ${base_file} -expr 'a/b' -prefix ${output_prefix}_base_divided
       3dcalc -a ${output_prefix}_base_divided+orig -expr 'a*100' -prefix ${output_prefix}_final_PSC
 
       
