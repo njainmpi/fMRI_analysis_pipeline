@@ -162,10 +162,11 @@ TIME_COURSE () {
       3dcalc -a ${output_prefix}_base_subtracted+orig -b ${base_file} -expr 'a/b' -prefix ${output_prefix}_base_divided
       3dcalc -a ${output_prefix}_base_divided+orig -expr 'a*100' -prefix ${output_prefix}_final_PSC
 
-      
+      file_list="${file_list} ${output_prefix}_final_PSC+orig"
     done
 
     file_list="${file_list} ${output_prefix}_final_PSC+orig"
+    echo $file_list
     3dTcat -prefix Time_Course_Averaged $file_list
     3dAFNItoNIFTI Time_Course_Averaged+orig
   

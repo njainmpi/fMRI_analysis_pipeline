@@ -123,7 +123,8 @@ for datasets in "${indices[@]}"; do
                         SMOOTHING_using_AFNI mc_stc_func+orig
                         
                         TIME_COURSE mc_stc_func+orig $Baseline_TRs $NoOfRepetitions $BlockLength $NoOfEpochs #04.09.2024 adding a new function to create time course averages for all epochs across single run    
-                        
+                        THRESHOLDING Time_Course_Averaged.nii 0.0 10.0 Time_Course_Averaged_threshholded.nii
+
                         STIMULUS_TIMING_CREATION $NoOfEpochs $BlockLength $Baseline_TRs stimulus_times.txt #16.08.2024 creating epoch times
                         
                         ACTIVATION_MAPS sm_mc_stc_func+orig stimulus_times.txt 6 stats_offset_sm_mc_stc_func #16.08.2024 adding a function to estimate activation maps from the data      
