@@ -147,7 +147,8 @@ TIME_COURSE () {
   3dAFNItoNIFTI time_course_averaged_raw_signal+orig
 
   # rm -f image_part*
-  3dTstat -mean -prefix mean_baseline_time_course $1[0..9]
+  base_file_initial_vol=$((epoch_length - 10))
+  3dTstat -mean -prefix mean_baseline_time_course $1[$base_file_initial_vol..$epoch_length]
   
     base_file="mean_baseline_time_course+orig"
     image_file="time_course_averaged_raw_signal+orig"
@@ -170,4 +171,5 @@ TIME_COURSE () {
     3dTcat -prefix Time_Course_Averaged $file_list
     3dAFNItoNIFTI Time_Course_Averaged+orig
   
+    rm -f *_base_subtracted* *_base_divided* *_final_PSC* image_part*
 }
