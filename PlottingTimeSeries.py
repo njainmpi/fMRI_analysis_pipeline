@@ -132,6 +132,9 @@ if __name__ == '__main__':
     #initializing command line argument
     fileName = sys.argv[1]
     Activation3ColumnFormatLoad = sys.argv[2]
+    Rows = int(sys.argv[3]) #no of volumes contained in one block
+    Cols = int(sys.argv[4]) #no of blocks
+    
     # fileName= "/Users/uqnjain/Desktop/PSC/vc_roi.txt"
     
     # voxel_fileName = sys.argv[2]
@@ -142,17 +145,20 @@ if __name__ == '__main__':
     # Activation3ColumnFormatLoad = "/Users/njain/Desktop/epi_220_vol_1sec.txt"
     Activation3ColumnFormat = np.loadtxt(Activation3ColumnFormatLoad)
     FirstBlockStartTime = int( Activation3ColumnFormat[0][0] )
-    LastBlockStartTime = int( Activation3ColumnFormat[len(Activation3ColumnFormat) - 1][0] )+ 1
+    LastBlockStartTime = int( Activation3ColumnFormat[len(Activation3ColumnFormat) - 1][0] )
     DurationOfOneBlock = int( Activation3ColumnFormat[1][0] - Activation3ColumnFormat[0][0] )
     StimulusOnDuration = int( Activation3ColumnFormat[0][1] )
 
     # RawInputFile = "task_ts.txt" #enter the name of the file here that has to be analysed
     StartIndex=10 #enter the first timepoint or volume that needs to be analysed
     NoOfVolsToBeDeletedFromEnd=0 #enter if any number of volumes needs to be deleted from the end
-    Rows = 30 #no of volumes contained in one block
-    Cols = 7 #no of blocks
+    
     PSC = []
 
+    print('Rows: ', Rows)
+    print('Cols: ', Cols)
+    print("type of number Rows", type(Rows))
+    print("type of number Cols", type(Cols))
     # ===================================================================================================================
     # Section 2: Reshaping Matrices based on the parameters
     # ===================================================================================================================
