@@ -10,6 +10,7 @@
 #   The input dataset has 1 runs, each variable and the time 
 #   points longinformation comes from the method file .  3dDeconvolve
 #   is used to generate the activation map.  There is one visual stimuli.
+time_series="/Users/njain/Desktop/Github/fMRI_analysis_pipeline/PlottingTimeSeries.py"
 
 STIMULUS_TIMING_CREATION () {
   Total_Epochs_For_Indexing_Purpose=$(($1 - 1)) #$1 is the total no of epochs, $2 is the no of baseline stimulation TRs, $3 is the total length of an epoch, $4 is the Volume TR
@@ -103,6 +104,27 @@ THRESHOLDING() {
 
 # Example usage of the function:
 # threshold_dataset "dataset+orig" 0 2.5 5.0 "thresholded_dataset"
+
+
+TIME_COURSE_PYTHON (){
+
+    local input_image=$1
+    local mask=$2
+    local output_name=$3
+    local task_file=$4
+
+    3dTstat -mean -prefix mean_baseline_time_course $1[$base_file_initial_vol..$epoch_length]
+    3dAFNItoNIFTI mean_baseline_time_course+orig
+    echo "Mark your ROIs for Time COurse Exctraction"
+    fsleyes mean_baseline_time_course.nii
+
+    fslmeants -i $input_image -m $mask -o $output_name
+
+    python PlottingTimeSeries.py $output_name $task_file
+
+}
+
+
 
 
 TIME_COURSE () {

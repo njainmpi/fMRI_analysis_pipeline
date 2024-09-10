@@ -131,6 +131,7 @@ if __name__ == '__main__':
     #===================================================================================================================
     #initializing command line argument
     fileName = sys.argv[1]
+    Activation3ColumnFormatLoad = sys.argv[2]
     # fileName= "/Users/uqnjain/Desktop/PSC/vc_roi.txt"
     
     # voxel_fileName = sys.argv[2]
@@ -138,7 +139,7 @@ if __name__ == '__main__':
     # print('voxel_FileName: ',voxel_fileName)
 
 
-    Activation3ColumnFormatLoad = "/Users/njain/Desktop/epi_220_vol_1sec.txt"
+    # Activation3ColumnFormatLoad = "/Users/njain/Desktop/epi_220_vol_1sec.txt"
     Activation3ColumnFormat = np.loadtxt(Activation3ColumnFormatLoad)
     FirstBlockStartTime = int( Activation3ColumnFormat[0][0] )
     LastBlockStartTime = int( Activation3ColumnFormat[len(Activation3ColumnFormat) - 1][0] )+ 1
