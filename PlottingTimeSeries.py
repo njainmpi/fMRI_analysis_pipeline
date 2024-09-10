@@ -110,7 +110,7 @@ def PercentSignalChangeConcatenated(RangeRawData, InputData, ErrorBars, Duration
     ax.errorbar(RangeRawData, InputData, yerr=ErrorBars, linewidth=2.0, ecolor='red', elinewidth=0.5, capsize=2)
     ax.set(xlabel='Time (in sec)', ylabel='Percent Signal Change', title='PSC averaged over all blocks')
     major_ticks = np.arange(0, 1 * (len(InputData) + 8), 10)
-    minor_ticks = np.arange(0, 1 * (len(InputData) + 8), 2)
+    minor_ticks = np.arange(0, 1 * (len(InputData) + 8), 1)
     ax.set_xticks(major_ticks)
     ax.set_xticks(minor_ticks, minor=True)
     # ax.grid(which='both')
@@ -192,12 +192,12 @@ if __name__ == '__main__':
     meanArrays = [float(sum(l)) / len(l) for l in zip(*df1_transposed.values.tolist())]
     meanArrays = np.array(meanArrays)
     print('MeanArrays: ', meanArrays[EndIndexOfABlock-4:])
-    BaselineVal=meanArrays[EndIndexOfABlock - 5:].mean()
+    BaselineVal=meanArrays[EndIndexOfABlock - 10:].mean()
     for i in meanArrays:
         PSC.append(((i - BaselineVal) / BaselineVal) * 100)
     print('PSC: ', PSC)
-    print(PSC[EndIndexOfABlock-4:])
-    PSC_Mean5 = np.array(PSC[EndIndexOfABlock - 5:]).mean()
+    
+    PSC_Mean5 = np.array(PSC[EndIndexOfABlock - 10:]).mean()
     print("Baseline Mean Val", np.mean(PSC_Mean5))
 
 
