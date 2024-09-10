@@ -94,6 +94,7 @@ THRESHOLDING() {
     local upper_thresh=$3     # The upper threshold value
     local output_prefix=$4    # The prefix for the output dataset
 
+
     # Apply the threshold using 3dcalc
     3dcalc -a "${input_dataset}" \
            -expr "a*step(a-${lower_thresh})*step(${upper_thresh}-a)" \
@@ -112,15 +113,20 @@ TIME_COURSE_PYTHON (){
     local mask=$2
     local output_name=$3
     local task_file=$4
+    local epoch_length=$5
+    local no_of_epochs=$6
 
-    3dTstat -mean -prefix mean_baseline_time_course $1[$base_file_initial_vol..$epoch_length]
-    3dAFNItoNIFTI mean_baseline_time_course+orig
-    echo "Mark your ROIs for Time COurse Exctraction"
-    fsleyes mean_baseline_time_course.nii
+    3dTstat -mean -prefix mean_functional $1
+    3dAFNItoNIFTI mean_functional+orig
+    echo "Mark your ROIs for Time Course Exctraction"
+    
+    fsleyes mean_functional.nii
 
     fslmeants -i $input_image -m $mask -o $output_name
 
-    python PlottingTimeSeries.py $output_name $task_file
+    echo $epoch_length
+    echo $no_of_epochs
+    python $time_series $output_name $task_file $epoch_length $no_of_epochs
 
 }
 

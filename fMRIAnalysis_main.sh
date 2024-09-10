@@ -119,15 +119,8 @@ for datasets in "${indices[@]}"; do
                         tag -a "Functional" "$Analysed_Data_Path/$runnames''$SequenceName" #14.08.2024 tagging a folder as functional scan 
                         
                         TEMPORAL_SNR_using_AFNI mc_stc_func+orig
-                        
                         SMOOTHING_using_AFNI mc_stc_func+orig
-                        
-                        # TIME_COURSE mc_stc_func+orig $Baseline_TRs $NoOfRepetitions $BlockLength $NoOfEpochs #04.09.2024 adding a new function to create time course averages for all epochs across single run    
-                        # THRESHOLDING Time_Course_Averaged.nii 0.0 10.0 Time_Course_Averaged_threshholded.nii
-
                         STIMULUS_TIMING_CREATION $NoOfEpochs $BlockLength $Baseline_TRs stimulus_times.txt #16.08.2024 creating epoch times
-                        
-                        
                         ACTIVATION_MAPS sm_mc_stc_func+orig stimulus_times.txt 6 stats_offset_sm_mc_stc_func #16.08.2024 adding a function to estimate activation maps from the data      
                         
                         CHECK_FILE_EXISTENCE Signal_Change_Map
@@ -138,11 +131,11 @@ for datasets in "${indices[@]}"; do
                         cp Signal_Change_Map/signal_change_map+orig* .
                         
                         THRESHOLDING signal_change_map+orig 0.5 6.0 signal_change_map_threshholded.nii.gz # 19.08.2024 added a function to threshhold images, here we threshhold signal change maps
-
+                        
                         CHECK_FILE_EXISTENCE TimeSeiesVoxels
                 
                         CREATING_3_COLUMNS $NoOfEpochs $Baseline_TRs $BlockLength $VolTR
-                        
+                        TIME_COURSE_PYTHON mc_stc_func.nii parenchyma.nii.gz parenchyma.txt activation_times.txt $BlockLength $NoOfEpochs #10.09.2024 function to get time course for individual voxel and averaged for all voxels in a mask
                         
                         # TIME_SERIES $Analysed_Data_Path/$runnames''$SequenceName/NIFTI_file_header_info.txt
             
