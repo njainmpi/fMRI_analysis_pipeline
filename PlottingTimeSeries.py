@@ -141,7 +141,6 @@ if __name__ == '__main__':
     # voxel_fileName = "/Users/uqnjain/Desktop/Project1_UTEEnhanedCBV/AnalysedData/Mouse8/Session2/7flash4msNoFlow/voxel_vc_roi.txt"
     # print('voxel_FileName: ',voxel_fileName)
 
-
     # Activation3ColumnFormatLoad = "/Users/njain/Desktop/epi_220_vol_1sec.txt"
     Activation3ColumnFormat = np.loadtxt(Activation3ColumnFormatLoad)
     FirstBlockStartTime = int( Activation3ColumnFormat[0][0] )
@@ -155,23 +154,49 @@ if __name__ == '__main__':
     
     PSC = []
 
-    print('Rows: ', Rows)
-    print('Cols: ', Cols)
-    print("type of number Rows", type(Rows))
-    print("type of number Cols", type(Cols))
     # ===================================================================================================================
     # Section 2: Reshaping Matrices based on the parameters
     # ===================================================================================================================
 
+    print('Start of Section 2')
+
     reshaped_arr,df=traverseData(fileName,StartIndex,NoOfVolsToBeDeletedFromEnd,Rows,Cols)
     DataOverBlocks=np.array(reshaped_arr[0:])
-    print(DataOverBlocks)
     RawData=np.array(df[0:])
+    
+    Average_Blocks = np.mean(DataOverBlocks, axis=1)
+        
+    # ===================================================================================================================
+    # Section 3: Estimating Baseline and Computing PSC
+    # ===================================================================================================================
+
+    
+    Mean_Raw_Signal = DataOverBlocks[-7:]
+    # Compute the mean for each column
+    Baseline_Mean_Raw_Signal = np.mean(Mean_Raw_Signal, axis=0)
+    # Subtract the mean value of each column from all values in DataOverBlocks
+    adjusted_array = DataOverBlocks - Baseline_Mean_Raw_Signal
+    # Divide each value in Adjusted_Array by the mean value of the corresponding column
+    adjusted_array_divided = np.divide(adjusted_array, Baseline_Mean_Raw_Signal, where=Baseline_Mean_Raw_Signal != 0)
+    PSC_blocks = adjusted_array_divided * 100
+    Percent_Signal_Change = np.mean(PSC_blocks, axis=1)
+    
+    
+    #calculating baseline frow raw signal in order to compute time series
+    Baseline_Raw_Signal = np.mean(Average_Blocks[-12:])
+
+    print('Percent_Signal_Change: ', Percent_Signal_Change)
+
+
+    
+    print('End of Section 2')
 
     # ===================================================================================================================
     # Section 3: Calculating Time(in sec) for x-axis for different plots
     # ===================================================================================================================
 
+
+    print('Start of Section 3')
     #converting volume info into time format,
     # first val is the point when first volume finishes to get acquired then based on the lenght of each block ,
     # we get the final time point of the block,
@@ -180,11 +205,12 @@ if __name__ == '__main__':
     TimeScaleBlocks = range(1, 1 * (len(DataOverBlocks) + 1), 1)
     TimeScaleBlocksConcanate = range(1, 1*(len(DataOverBlocks)+8), 1)
     EndIndexOfABlock = len(DataOverBlocks) - 1
-
+    print('End of Section 3')
     # ===================================================================================================================
     # Section 4: Computing Percentage Signal Change
     # ===================================================================================================================
 
+    print('Start of Section 4')
     # meanArrays = DataOverBlocks.mean(axis=1)    #mean values of all blocks
     df1 = pd.DataFrame(data=DataOverBlocks)
     df1_transposed = df1.transpose()
@@ -200,14 +226,18 @@ if __name__ == '__main__':
     PSC_Mean5 = np.array(PSC[EndIndexOfABlock - 10:]).mean()
     print("Baseline Mean Val", np.mean(PSC_Mean5))
 
-
+    print('End of Section 4')
     # ===================================================================================================================
     # Section 5: Computing Standard Error of Mean
     # ===================================================================================================================
 
+    print('Start of Section 5')
     ErrorOfMean=[]
     for i in range(len(DataOverBlocks)):
-        ErrorOfMean.append((np.std(PSC[i]))/math.sqrt(1))
+        ErrorOfMean.append(np.std(PSC[i]))
+
+    print("TimeScaleRawData:", ErrorOfMean)
+    print('End of Section 5')
 
     # ===================================================================================================================
     # Section 6: Plotting Graphs and Saving Data
@@ -216,6 +246,7 @@ if __name__ == '__main__':
     np.savetxt('PercentageSignalChange' + fileName.replace(".txt","") + '.txt',PSC)
     np.savetxt('DataOverBlocks' + fileName.replace(".txt","") + '.txt', DataOverBlocks)
 
+    
 
     AllStartTimes = np.array(range(FirstBlockStartTime, LastBlockStartTime ,DurationOfOneBlock))    #all times when the activation start
     PlotRawData(TimeScaleRawData, RawData, AllStartTimes, StimulusOnDuration,fileName.replace(".txt",""))
