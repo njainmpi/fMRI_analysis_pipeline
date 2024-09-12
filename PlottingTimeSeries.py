@@ -88,40 +88,23 @@ def PlotDataOverBlocks(RangeRawData, InputData, DurationStimulationOn,filename):
     plt.gcf()
     # print('BlockDataOverTime_'+filename)
     plt.savefig('BlockDataOverTime_'+filename)
-def PercentSignalChange(RangeRawData, InputData, ErrorBars,DurationStimulationOn, filename):
+
+def PercentSignalChange(Time, InputData, ErrorBars, filename):
     fig, ax = plt.subplots()
-    ax.errorbar(RangeRawData, InputData, yerr=ErrorBars, linewidth=2.0, ecolor='red', elinewidth=0.5, capsize=2)
+    ax.errorbar(Time, InputData, yerr=ErrorBars, linewidth=2.0, ecolor='red', elinewidth=0.5, capsize=2)
     ax.set(xlabel='Time (in sec)', ylabel='Percent Signal Change', title='PSC averaged over all blocks')
-    major_ticks = np.arange(0, 3*(len(InputData)+1), 10)
-    minor_ticks = np.arange(0, 3*(len(InputData)+1), 2)
-    ax.set_xticks(major_ticks)
-    ax.set_xticks(minor_ticks, minor=True)
-    # ax.grid(which='both')
-    # ax.grid(which='minor', alpha=0.2)
-    # ax.grid(which='major', alpha=0.5)
+    # major_ticks = np.arange(0, 3*(len(InputData)+1), 10)
+    # minor_ticks = np.arange(0, 3*(len(InputData)+1), 2)
+    # ax.set_xticks(major_ticks)
+    # ax.set_xticks(minor_ticks, minor=True)
+    # # ax.grid(which='both')
+    # # ax.grid(which='minor', alpha=0.2)
+    # # ax.grid(which='major', alpha=0.5)
     # ax.axvspan(0, DurationStimulationOn, color='y', alpha=0.5, lw=0)
     plt.gcf()
     # plt.show()
     # print('PSC_'+filename)
     plt.savefig('PSC_'+filename)
-    # plt.savefig('Percent Signal Change'+fileName.replace(".txt",""))
-def PercentSignalChangeConcatenated(RangeRawData, InputData, ErrorBars, DurationStimulationOn, filename):
-    fig, ax = plt.subplots()
-    ax.errorbar(RangeRawData, InputData, yerr=ErrorBars, linewidth=2.0, ecolor='red', elinewidth=0.5, capsize=2)
-    ax.set(xlabel='Time (in sec)', ylabel='Percent Signal Change', title='PSC averaged over all blocks')
-    major_ticks = np.arange(0, 1 * (len(InputData) + 8), 10)
-    minor_ticks = np.arange(0, 1 * (len(InputData) + 8), 1)
-    ax.set_xticks(major_ticks)
-    ax.set_xticks(minor_ticks, minor=True)
-    # ax.grid(which='both')
-    # ax.grid(which='minor', alpha=0.2)
-    # ax.grid(which='major', alpha=0.5)
-    # ax.axvspan(0+21, DurationStimulationOn+21, alpha=0.5, lw=0)
-    plt.gcf()
-    # plt.show()
-    # print('PSCC_' + filename)
-    plt.savefig('PSCC_' + filename)
-    np.savetxt('PSCC_' + filename + '.txt', PSC)
     # plt.savefig('Percent Signal Change'+fileName.replace(".txt",""))
 
 if __name__ == '__main__':
@@ -174,92 +157,55 @@ if __name__ == '__main__':
     Mean_Raw_Signal = DataOverBlocks[-7:]
     # Compute the mean for each column
     Baseline_Mean_Raw_Signal = np.mean(Mean_Raw_Signal, axis=0)
-    # Subtract the mean value of each column from all values in DataOverBlocks
+    # Computing PSC
     adjusted_array = DataOverBlocks - Baseline_Mean_Raw_Signal
-    # Divide each value in Adjusted_Array by the mean value of the corresponding column
     adjusted_array_divided = np.divide(adjusted_array, Baseline_Mean_Raw_Signal, where=Baseline_Mean_Raw_Signal != 0)
     PSC_blocks = adjusted_array_divided * 100
     Percent_Signal_Change = np.mean(PSC_blocks, axis=1)
     
-    
-    #calculating baseline frow raw signal in order to compute time series
-    Baseline_Raw_Signal = np.mean(Average_Blocks[-12:])
-
-    print('Percent_Signal_Change: ', Percent_Signal_Change)
-
-
-    
-    print('End of Section 2')
-
-    # ===================================================================================================================
-    # Section 3: Calculating Time(in sec) for x-axis for different plots
-    # ===================================================================================================================
-
-
-    print('Start of Section 3')
-    #converting volume info into time format,
-    # first val is the point when first volume finishes to get acquired then based on the lenght of each block ,
-    # we get the final time point of the block,
-    # third part is the volume TR
-    TimeScaleRawData = range(1, 1 * (len(RawData) + 1), 1)
-    TimeScaleBlocks = range(1, 1 * (len(DataOverBlocks) + 1), 1)
-    TimeScaleBlocksConcanate = range(1, 1*(len(DataOverBlocks)+8), 1)
-    EndIndexOfABlock = len(DataOverBlocks) - 1
-    print('End of Section 3')
-    # ===================================================================================================================
-    # Section 4: Computing Percentage Signal Change
-    # ===================================================================================================================
-
-    print('Start of Section 4')
-    # meanArrays = DataOverBlocks.mean(axis=1)    #mean values of all blocks
-    df1 = pd.DataFrame(data=DataOverBlocks)
-    df1_transposed = df1.transpose()
-
-    meanArrays = [float(sum(l)) / len(l) for l in zip(*df1_transposed.values.tolist())]
-    meanArrays = np.array(meanArrays)
-    print('MeanArrays: ', meanArrays[EndIndexOfABlock-4:])
-    BaselineVal=meanArrays[EndIndexOfABlock - 10:].mean()
-    for i in meanArrays:
-        PSC.append(((i - BaselineVal) / BaselineVal) * 100)
-    print('PSC: ', PSC)
-    
-    PSC_Mean5 = np.array(PSC[EndIndexOfABlock - 10:]).mean()
-    print("Baseline Mean Val", np.mean(PSC_Mean5))
-
-    print('End of Section 4')
-    # ===================================================================================================================
-    # Section 5: Computing Standard Error of Mean
-    # ===================================================================================================================
-
-    print('Start of Section 5')
-    ErrorOfMean=[]
-    for i in range(len(DataOverBlocks)):
-        ErrorOfMean.append(np.std(PSC[i]))
-
-    print("TimeScaleRawData:", ErrorOfMean)
-    print('End of Section 5')
-
-    # ===================================================================================================================
-    # Section 6: Plotting Graphs and Saving Data
-    # ===================================================================================================================
-
-    np.savetxt('PercentageSignalChange' + fileName.replace(".txt","") + '.txt',PSC)
-    np.savetxt('DataOverBlocks' + fileName.replace(".txt","") + '.txt', DataOverBlocks)
-
+    # Compute the standard error of the mean (SEM)
+    std_dev_PSC = np.std(PSC_blocks, axis=1, ddof=1)
+    SEM_PSC = std_dev_PSC / np.sqrt(Cols)
     
 
-    AllStartTimes = np.array(range(FirstBlockStartTime, LastBlockStartTime ,DurationOfOneBlock))    #all times when the activation start
-    PlotRawData(TimeScaleRawData, RawData, AllStartTimes, StimulusOnDuration,fileName.replace(".txt",""))
 
-    PlotDataOverBlocks(TimeScaleBlocks, DataOverBlocks, StimulusOnDuration, fileName.replace(".txt", ""))
- 
-    #PSC madification
-    PSC2=PSC[-7:]
-    PSC_final=PSC2+PSC
+    ## Creating an array with concatenated data
+    ## Step 1: Copy the last 10 rows from the array
+    PSC_last_n_rows = Percent_Signal_Change[-10:]
+    zero_row = np.array([[0]])
+    SEM_last_n_rows = SEM_PSC[-10:]
+
+    # Converting arrays into DataFrame
+    Percent_Signal_Change_df = pd.DataFrame(Percent_Signal_Change, columns=['Column1'])
+    zero_row_df = pd.DataFrame(zero_row, columns=['Column1'])
+    PSC_last_n_rows_df = pd.DataFrame(PSC_last_n_rows, columns=['Column1'])
+    SEM_PSC_df = pd.DataFrame(SEM_PSC, columns=['Column1'])
+    SEM_last_n_rows_df = pd.DataFrame(SEM_last_n_rows, columns=['Column1'])
 
 
-    ErrorOfMean2=ErrorOfMean[-7:]
-    ErrorOfMeanFinal=ErrorOfMean2+ErrorOfMean
+    PSC_Concatenated = pd.concat([PSC_last_n_rows_df, zero_row_df, Percent_Signal_Change_df], axis=0, ignore_index=True)
+    SEM_Concatenated = pd.concat([SEM_last_n_rows_df, zero_row_df, SEM_PSC_df], axis=0, ignore_index=True)
+   
+    # ===================================================================================================================
+    # Section 4: Calculating Time(in sec) for x-axis for different plots
+    # ===================================================================================================================
 
-    PercentSignalChangeConcatenated(TimeScaleBlocksConcanate, PSC_final, ErrorOfMeanFinal, StimulusOnDuration, fileName.replace(".txt",""))
 
+    Time_Scale = list(range(-10, 31, 1))
+
+    # Create a DataFrame from the range
+    Time_Scale_df = pd.DataFrame(Time_Scale, columns=['Numbers'])
+
+    print('Time_Scale_df_size:', Time_Scale_df.shape)
+
+    
+    # # ===================================================================================================================
+    # # Section 5: Plotting Graphs and Saving Data
+    # # ===================================================================================================================
+
+    np.savetxt('PSC_Concatenated' + fileName.replace(".txt","") + '.txt', PSC_Concatenated)
+    np.savetxt('SEM_Concatenated' + fileName.replace(".txt","") + '.txt', SEM_Concatenated)
+    np.savetxt('Time_Scale' + fileName.replace(".txt","") + '.txt', Time_Scale_df)
+    
+    PercentSignalChange (Time_Scale_df, PSC_Concatenated, SEM_Concatenated, fileName)
+    
