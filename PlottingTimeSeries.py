@@ -88,24 +88,27 @@ def PlotDataOverBlocks(RangeRawData, InputData, DurationStimulationOn,filename):
     plt.gcf()
     # print('BlockDataOverTime_'+filename)
     plt.savefig('BlockDataOverTime_'+filename)
-
-def PercentSignalChange(Time, InputData, ErrorBars, filename):
+def Graph_Plot (Time, InputData, ErrorBars,filename):
+    # Create the error bar plot
+    
+    # Convert DataFrames to NumPy arrays for easy access
+    x = Time.values.flatten()   # X-axis values
+    y = InputData.values.flatten()   # Y-axis values
+    error = ErrorBars.values.flatten()  # Error values
+    
     fig, ax = plt.subplots()
-    ax.errorbar(Time, InputData, yerr=ErrorBars, linewidth=2.0, ecolor='red', elinewidth=0.5, capsize=2)
-    ax.set(xlabel='Time (in sec)', ylabel='Percent Signal Change', title='PSC averaged over all blocks')
-    # major_ticks = np.arange(0, 3*(len(InputData)+1), 10)
-    # minor_ticks = np.arange(0, 3*(len(InputData)+1), 2)
-    # ax.set_xticks(major_ticks)
-    # ax.set_xticks(minor_ticks, minor=True)
-    # # ax.grid(which='both')
-    # # ax.grid(which='minor', alpha=0.2)
-    # # ax.grid(which='major', alpha=0.5)
-    # ax.axvspan(0, DurationStimulationOn, color='y', alpha=0.5, lw=0)
+    ax.errorbar(x, y, yerr=error, xerr=None, linewidth=3.0, ecolor='red', capsize=5, capthick=2)
+    ax.set_xlabel('Time (in sec)', fontsize=14, fontweight='bold')
+    ax.set_ylabel('Percent Signal Change', fontsize=14, fontweight='bold')
+    ax.set_title('PSC averaged over all blocks', fontsize=16, fontweight='bold')
+
+    ax.tick_params(axis='x', labelsize=20)  
+    ax.tick_params(axis='y', labelsize=20)  
     plt.gcf()
+    # Show the plot
     # plt.show()
-    # print('PSC_'+filename)
-    plt.savefig('PSC_'+filename)
-    # plt.savefig('Percent Signal Change'+fileName.replace(".txt",""))
+    fig.savefig('Percent_Signal_Change_' + fileName.replace(".txt", "") + ".png", dpi=1200)
+
 
 if __name__ == '__main__':
 
@@ -118,12 +121,6 @@ if __name__ == '__main__':
     Rows = int(sys.argv[3]) #no of volumes contained in one block
     Cols = int(sys.argv[4]) #no of blocks
     
-    # fileName= "/Users/uqnjain/Desktop/PSC/vc_roi.txt"
-    
-    # voxel_fileName = sys.argv[2]
-    # voxel_fileName = "/Users/uqnjain/Desktop/Project1_UTEEnhanedCBV/AnalysedData/Mouse8/Session2/7flash4msNoFlow/voxel_vc_roi.txt"
-    # print('voxel_FileName: ',voxel_fileName)
-
     # Activation3ColumnFormatLoad = "/Users/njain/Desktop/epi_220_vol_1sec.txt"
     Activation3ColumnFormat = np.loadtxt(Activation3ColumnFormatLoad)
     FirstBlockStartTime = int( Activation3ColumnFormat[0][0] )
@@ -141,7 +138,7 @@ if __name__ == '__main__':
     # Section 2: Reshaping Matrices based on the parameters
     # ===================================================================================================================
 
-    print('Start of Section 2')
+ 
 
     reshaped_arr,df=traverseData(fileName,StartIndex,NoOfVolsToBeDeletedFromEnd,Rows,Cols)
     DataOverBlocks=np.array(reshaped_arr[0:])
@@ -185,7 +182,6 @@ if __name__ == '__main__':
 
     PSC_Concatenated = pd.concat([PSC_last_n_rows_df, zero_row_df, Percent_Signal_Change_df], axis=0, ignore_index=True)
     SEM_Concatenated = pd.concat([SEM_last_n_rows_df, zero_row_df, SEM_PSC_df], axis=0, ignore_index=True)
-   
     # ===================================================================================================================
     # Section 4: Calculating Time(in sec) for x-axis for different plots
     # ===================================================================================================================
@@ -195,10 +191,8 @@ if __name__ == '__main__':
 
     # Create a DataFrame from the range
     Time_Scale_df = pd.DataFrame(Time_Scale, columns=['Numbers'])
+    Time_Scale_df['Numbers'] = Time_Scale_df['Numbers'].astype(float)
 
-    print('Time_Scale_df_size:', Time_Scale_df.shape)
-
-    
     # # ===================================================================================================================
     # # Section 5: Plotting Graphs and Saving Data
     # # ===================================================================================================================
@@ -207,5 +201,8 @@ if __name__ == '__main__':
     np.savetxt('SEM_Concatenated' + fileName.replace(".txt","") + '.txt', SEM_Concatenated)
     np.savetxt('Time_Scale' + fileName.replace(".txt","") + '.txt', Time_Scale_df)
     
-    PercentSignalChange (Time_Scale_df, PSC_Concatenated, SEM_Concatenated, fileName)
+
+    
+    Graph_Plot (Time_Scale_df, PSC_Concatenated, SEM_Concatenated, fileName)
+
     
