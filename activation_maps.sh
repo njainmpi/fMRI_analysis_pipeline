@@ -58,11 +58,11 @@ ACTIVATION_MAPS () {
 
 SIGNAL_CHANGE_MAPS () {
 
-  3dTstat -mean -prefix mean_baseline $1[0..9]
+  3dTstat -mean -prefix mean_baseline $1[0..500]
   file_list=""
 
   # Loop to compute the mean of every 5 images from 11 to 140
-  for i in $(seq 10 5 $(($2 - 4))); do
+  for i in $(seq 0 5 $(($2 - 4))); do
     end=$((i+4))  # Define the end index for the 5 images
     output_prefix="mean_${i}_to_${end}"
     3dTstat -mean -prefix ${output_prefix} $1[${i}..${end}]

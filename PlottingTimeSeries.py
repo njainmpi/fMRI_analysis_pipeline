@@ -97,7 +97,7 @@ def Graph_Plot (Time, InputData, ErrorBars,filename):
     error = ErrorBars.values.flatten()  # Error values
     
     fig, ax = plt.subplots()
-    ax.errorbar(x, y, yerr=error, xerr=None, linewidth=3.0, ecolor='red', capsize=5, capthick=2)
+    ax.errorbar(x, y, yerr=error, xerr=None, linewidth=1.5, ecolor='red', capsize=5, capthick=2)
     ax.set_xlabel('Time (in sec)', fontsize=14, fontweight='bold')
     ax.set_ylabel('Percent Signal Change', fontsize=14, fontweight='bold')
     ax.set_title('PSC averaged over all blocks', fontsize=16, fontweight='bold')
@@ -107,7 +107,7 @@ def Graph_Plot (Time, InputData, ErrorBars,filename):
     plt.gcf()
     # Show the plot
     # plt.show()
-    fig.savefig('Percent_Signal_Change_' + fileName.replace(".txt", "") + ".png", dpi=1200)
+    fig.savefig('Percent_Signal_Change_' + fileName.replace(".txt", "") + ".png", dpi=2400)
 
 
 if __name__ == '__main__':
@@ -151,11 +151,12 @@ if __name__ == '__main__':
     # ===================================================================================================================
 
     
-    Mean_Raw_Signal = DataOverBlocks[-7:]
+    Mean_Raw_Signal = DataOverBlocks[-12:]
     # Compute the mean for each column
     Baseline_Mean_Raw_Signal = np.mean(Mean_Raw_Signal, axis=0)
     # Computing PSC
     adjusted_array = DataOverBlocks - Baseline_Mean_Raw_Signal
+
     adjusted_array_divided = np.divide(adjusted_array, Baseline_Mean_Raw_Signal, where=Baseline_Mean_Raw_Signal != 0)
     PSC_blocks = adjusted_array_divided * 100
     Percent_Signal_Change = np.mean(PSC_blocks, axis=1)
@@ -197,9 +198,10 @@ if __name__ == '__main__':
     # # Section 5: Plotting Graphs and Saving Data
     # # ===================================================================================================================
 
-    np.savetxt('PSC_Concatenated' + fileName.replace(".txt","") + '.txt', PSC_Concatenated)
+    
     np.savetxt('SEM_Concatenated' + fileName.replace(".txt","") + '.txt', SEM_Concatenated)
     np.savetxt('Time_Scale' + fileName.replace(".txt","") + '.txt', Time_Scale_df)
+    np.savetxt('PSC_blocks' + fileName.replace(".txt","") + '.txt', PSC_blocks)
     
 
     
