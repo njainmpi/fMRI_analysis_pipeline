@@ -56,35 +56,6 @@ ACTIVATION_MAPS () {
 # stats_sm_mc_stc_func+orig.BRIK/HEAD: This will contain F-statistics and t-statistics maps that show the significance of the activation at each voxel.
 # stats_sm_mc_stc_func+orig.BRIK/HEAD: This file will contain the beta coefficients, representing the amplitude of the response at each voxel.
 
-SIGNAL_CHANGE_MAPS () {
-
-  3dTstat -mean -prefix mean_baseline $1[0..500]
-  file_list=""
-
-  # Loop to compute the mean of every 5 images from 11 to 140
-  for i in $(seq 0 5 $(($2 - 4))); do
-    end=$((i+4))  # Define the end index for the 5 images
-    output_prefix="mean_${i}_to_${end}"
-    3dTstat -mean -prefix ${output_prefix} $1[${i}..${end}]
-    3dcalc -a ${output_prefix}+orig -b mean_baseline+orig -expr 'a-b' -prefix ${output_prefix}_sig_change
-    3dcalc -a ${output_prefix}_sig_change+orig -b mean_baseline+orig -expr 'a/b' -prefix ${output_prefix}_ratio_sc
-    3dcalc -a ${output_prefix}_ratio_sc+orig -expr 'a*100' -prefix ${output_prefix}_percent_sc
-    file_list="${file_list} ${output_prefix}_percent_sc+orig"
-    
-    rm -f *ratio*
-  done
-
-echo $file_list
-# Use 3dTcat to merge all files into one
-3dTcat -prefix signal_change_map $file_list
-}
-
-# mean_first10.nii: The mean image from the first 10 images (indices 0 to 9).
-# Loop: The loop starts at the 11th image (index 10) and increments by 5 until the 136th image (index 135).
-# For each step in the loop:
-# i: The starting index of the current 5-image block.
-# end: The ending index of the current 5-image block.
-# output_prefix: The output file name for the mean of the current block of 5 images.
 
 
 # Function to apply lower and upper thresholds to a dataset
