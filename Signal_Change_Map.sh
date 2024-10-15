@@ -4,9 +4,23 @@
 SIGNAL_CHANGE_MAPS () {
 
         input_4d_nifti=$1   # 4D NIfTI file you want to smooth
-        mask_image="G1_cp_mask.nii.gz"  # Binary mask file
+
+        fslmaths $input_4d_nifti -Tmean mean_${1}
+        input_4d_nifti_mean=mean_${1}
+        echo $input_4d_nifti_mean
+
+        if [ -f "mask_${input_4d_nifti}" ]; then 
+            echo "Mask Present"
+        else 
+            echo "Create a mask first"
+            fsleyes "$input_4d_nifti_mean"
+        fi
+        
+        mask_image="mask_${input_4d_nifti}"  # Binary mask file
         output_smoothed="s${input_4d_nifti}" # Output smoothed file
-        fwhm=1                          # Full-width half-maximum for Gaussian smoothing (in mm)
+        fwhm=1                               # Full-width half-maximum for Gaussian smoothing (in mm)
+        output_dir="frames"                  # Directory to store screenshot frames
+        movie_output="final_movie.mp4"       # Name of the output movie file
 
         # Step 1: Convert FWHM to sigma for fslmaths smoothing
         # FSL smoothing sigma = FWHM / (2 * sqrt(2 * log(2)))
@@ -56,6 +70,12 @@ SIGNAL_CHANGE_MAPS () {
         3dTcat -prefix final_processed_image.nii.gz "${processed_images[@]}"
 
         echo "All blocks processed and combined into final 4D image: final_processed_image.nii.gz"
+
+
+        rm -f *block* processed* ratio_processed*
+
+        # Step 4: Create the output directory for screenshots
+        mkdir -p "$output_dir"
 
 
 }
