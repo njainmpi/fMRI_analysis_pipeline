@@ -67,9 +67,9 @@ SIGNAL_CHANGE_MAPS () {
 
 
         # Step 3: Combine all the processed blocks into a single 4D image
-        3dTcat -prefix final_processed_image.nii.gz "${processed_images[@]}"
+        3dTcat -prefix Signal_Change_Map.nii.gz "${processed_images[@]}"
 
-        echo "All blocks processed and combined into final 4D image: final_processed_image.nii.gz"
+        echo "All blocks processed and combined into final 4D image: Signal_Change_Map.nii.gz"
 
 
         rm -f *block* processed* ratio_processed*
@@ -77,5 +77,11 @@ SIGNAL_CHANGE_MAPS () {
         # Step 4: Create the output directory for screenshots
         mkdir -p "$output_dir"
 
+
+        # Step 5: Extract screenshots for each volume in the final processed 4D image
+        num_volumes=$(3dinfo -nv Signal_Change_Map.nii.gz)  # Get the number of volumes
+
+
+python ~/Desktop/Github/fMRI_analysis_pipeline/Making_videos_for_SCM.py mean_${1} Signal_Change_Map.nii.gz
 
 }

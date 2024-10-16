@@ -1,14 +1,16 @@
 import os
+import sys
 import nibabel as nib
 import numpy as np
 import matplotlib.pyplot as plt
 import subprocess
 
 # Step 1: Define paths
-mean_image_path = "mean_G1_cp.nii.gz"
-processed_image_path = "final_processed_image.nii.gz"
+
+mean_image_path = sys.argv[1]
+processed_image_path = sys.argv[2]
 output_dir = "overlay_screenshots"
-movie_output = "overlay_movie.mp4"
+movie_output = "Signal_Change_Map.mp4"
 gif_output = "Signal_Change_Map.gif"
 
 # Step 2: Create output directory for screenshots
