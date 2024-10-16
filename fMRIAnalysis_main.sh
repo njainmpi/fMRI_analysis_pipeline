@@ -126,10 +126,9 @@ for datasets in "${indices[@]}"; do
                         CHECK_FILE_EXISTENCE Signal_Change_Map
                         
                         cd Signal_Change_Map
-                        SIGNAL_CHANGE_MAPS ../G1_cp.nii.gz $NoOfRepetitions # 17.08.2024 creating signal change maps
+                        SIGNAL_CHANGE_MAPS ../G1_cp.nii.gz # 16.10.2024 creating signal change maps
                         cd ..
-                        cp Signal_Change_Map/signal_change_map+orig* .
-                        
+                                                
                         # THRESHOLDING signal_change_map+orig 0.5 6.0 signal_change_map_threshholded.nii.gz # 19.08.2024 added a function to threshhold images, here we threshhold signal change maps
                         
                         # CHECK_FILE_EXISTENCE TimeSeiesVoxels
