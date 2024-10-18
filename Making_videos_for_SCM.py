@@ -61,8 +61,8 @@ for vol_idx in range(num_volumes):
     ax.imshow(processed_slice, cmap="hot", alpha=0.5, vmin=2, vmax=7)  # Scale from 2 to 7
 
     # Set the title
-    ax.set_title(f"Overlay of Mean and Processed Image - Volume {vol_idx} (Slice 11)")
-    ax.axis('off')  # Hide axes for a cleaner look
+    # ax.set_title(f"Overlay of Mean and Processed Image - Volume {vol_idx} (Slice 7)")
+    # ax.axis('off')  # Hide axes for a cleaner look
 
     # Save the screenshot
     screenshot_path = os.path.join(output_dir, f"frame_{vol_idx}.png")
