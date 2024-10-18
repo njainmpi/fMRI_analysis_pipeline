@@ -4,6 +4,24 @@
 SIGNAL_CHANGE_MAPS () {
 
         input_4d_nifti=$1   # 4D NIfTI file you want to smooth
+        local base_start=$2
+        local base_end=$3
+        local file_for_parameter_calculation=$4
+        local baseline_duration=$5
+        local pacap_injection=$6
+
+
+        NoOfRepetitions=$(awk '/PVM_NRepetitions=/ {print substr($0,21,3)}' $file_for_parameter_calculation)
+        TotalScanTime=$(awk '/PVM_ScanTime=/ {print substr($0,17,6)}' $file_for_parameter_calculation)
+        #here the awk will look at the number of slices acquired using the information located in the methods file    
+            
+        # 07.08.2024 Estimating Volume TR
+        VolTR_msec=$(echo "scale=0; $TotalScanTime/$NoOfRepetitions" | bc)
+        VolTR=$(echo "scale=0; $VolTR_msec/1000" | bc)
+
+        No_of_Vols_in_pre_PACAP_injection=$((baseline_duration * 60 / VolTR))
+        No_of_Vols_during_pre_PACAP_injection=$((pacap_injection * 60 / VolTR))
+
 
         fslmaths $input_4d_nifti -Tmean mean_${1}
         input_4d_nifti_mean=mean_${1}
@@ -39,30 +57,33 @@ SIGNAL_CHANGE_MAPS () {
         echo "Smoothing complete. Output saved as $output_smoothed"
 
         # Step 1: Compute the baseline image (mean of the first 600 repetitions)
-        3dTstat -mean -prefix baseline_image.nii.gz sG1_cp.nii.gz'[0..599]'
+        3dTstat -mean -prefix baseline_image.nii.gz sG1_cp.nii.gz"[${base_start}..${base_end}]"
 
         # Initialize an empty list to store the intermediate processed images
         processed_images=()
 
+        volumes_per_block=$((60 / VolTR))
+
         # Step 2: Process blocks of 60 repetitions, starting from time point 601
-        for start_idx in $(seq 600 60 1740); do
-        end_idx=$((start_idx + 59))
-        
-        # Create a meaningful label for this block of repetitions
-        label="${start_idx}_to_${end_idx}"
-        
-        # Step 2a: Compute the mean for the current block of 60 repetitions
-        3dTstat -mean -prefix block_mean_${label}.nii.gz sG1_cp.nii.gz"[${start_idx}..${end_idx}]"
-        
-        # Step 2b: Subtract the baseline and divide by the baseline
-        3dcalc -a block_mean_${label}.nii.gz -b baseline_image.nii.gz -expr '(a-b)/b' -prefix ratio_processed_${label}.nii.gz
-        #Step 2c: Converting into percent by multiplying it by 100
-        3dcalc -a ratio_processed_${label}.nii.gz -expr 'a*100' -prefix processed_${label}.nii.gz
-            
-        # Add the processed image to the list
-        processed_images+=("processed_${label}.nii.gz")
-        
-        echo "Processed block: ${start_idx} to ${end_idx}"
+        for start_idx in $(seq 600 $volumes_per_block 1740); do
+                end_idx=$((start_idx + volumes_per_block - 1))
+                
+                # Create a meaningful label for this block of repetitions
+                label="${start_idx}_to_${end_idx}"
+                
+                # Step 2a: Compute the mean for the current block of 60 repetitions
+                3dTstat -mean -prefix block_mean_${label}.nii.gz sG1_cp.nii.gz"[${start_idx}..${end_idx}]"
+                
+                # Step 2b: Subtract the baseline and divide by the baseline
+                3dcalc -a block_mean_${label}.nii.gz -b baseline_image.nii.gz -expr '(a-b)/b' -prefix ratio_processed_${label}.nii.gz
+                
+                #Step 2c: Converting into percent by multiplying it by 100
+                3dcalc -a ratio_processed_${label}.nii.gz -expr 'a*100' -prefix processed_${label}.nii.gz
+                    
+                # Add the processed image to the list
+                processed_images+=("processed_${label}.nii.gz")
+                
+                echo "Processed block: ${start_idx} to ${end_idx}"
         done
 
 
