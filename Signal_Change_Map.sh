@@ -9,10 +9,11 @@ SIGNAL_CHANGE_MAPS () {
         local file_for_parameter_calculation=$4
         local baseline_duration=$5
         local pacap_injection=$6
+        local slice_idx=$7
 
 
-        NoOfRepetitions=$(awk '/PVM_NRepetitions=/ {print substr($0,21,3)}' $file_for_parameter_calculation)
-        TotalScanTime=$(awk '/PVM_ScanTime=/ {print substr($0,17,6)}' $file_for_parameter_calculation)
+        NoOfRepetitions=$(awk '/PVM_NRepetitions=/ {print substr($0,21,4)}' $file_for_parameter_calculation)
+        TotalScanTime=$(awk '/PVM_ScanTime=/ {print substr($0,17,7)}' $file_for_parameter_calculation)
         #here the awk will look at the number of slices acquired using the information located in the methods file    
             
         # 07.08.2024 Estimating Volume TR
@@ -63,9 +64,13 @@ SIGNAL_CHANGE_MAPS () {
         processed_images=()
 
         volumes_per_block=$((60 / VolTR))
+        end_idx_pt=$(( NoOfRepetitions - volumes_per_block ))
+        echo $NoOfRepetitions
+        echo $volumes_per_block
+        echo $end_idx_pt
 
         # Step 2: Process blocks of 60 repetitions, starting from time point 601
-        for start_idx in $(seq 600 $volumes_per_block 1740); do
+        for start_idx in $(seq $No_of_Vols_in_pre_PACAP_injection $volumes_per_block $end_idx_pt); do
                 end_idx=$((start_idx + volumes_per_block - 1))
                 
                 # Create a meaningful label for this block of repetitions
@@ -76,7 +81,7 @@ SIGNAL_CHANGE_MAPS () {
                 
                 # Step 2b: Subtract the baseline and divide by the baseline
                 3dcalc -a block_mean_${label}.nii.gz -b baseline_image.nii.gz -expr '(a-b)/b' -prefix ratio_processed_${label}.nii.gz
-                
+
                 #Step 2c: Converting into percent by multiplying it by 100
                 3dcalc -a ratio_processed_${label}.nii.gz -expr 'a*100' -prefix processed_${label}.nii.gz
                     
@@ -103,6 +108,6 @@ SIGNAL_CHANGE_MAPS () {
         num_volumes=$(3dinfo -nv Signal_Change_Map.nii.gz)  # Get the number of volumes
 
 
-python ~/Desktop/Github/fMRI_analysis_pipeline/Making_videos_for_SCM.py mean_${1} Signal_Change_Map.nii.gz
+python ~/Desktop/Github/fMRI_analysis_pipeline/Making_videos_for_SCM.py mean_${1} Signal_Change_Map.nii.gz $slice_idx
 
 }

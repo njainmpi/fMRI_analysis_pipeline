@@ -48,7 +48,7 @@ for vol_idx in range(num_volumes):
     fig, ax = plt.subplots(figsize=(6, 6))
 
     # Set slice to 11 for both the mean and processed image
-    slice_idx = 11  # Fixed slice 11
+    slice_idx = 10  # Fixed slice 11
 
     # Flip the slices left-right (flip along the horizontal axis, axis 1)
     mean_slice = np.flip(mean_data[..., slice_idx], axis=1)
