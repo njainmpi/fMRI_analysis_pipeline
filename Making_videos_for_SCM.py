@@ -9,9 +9,10 @@ import subprocess
 
 mean_image_path = sys.argv[1]
 processed_image_path = sys.argv[2]
+slice_number = int(sys.argv[3])
 output_dir = "overlay_screenshots"
 movie_output = "Signal_Change_Map.mp4"
-gif_output = "Signal_Change_Map.gif"
+
 
 # Step 2: Create output directory for screenshots
 os.makedirs(output_dir, exist_ok=True)
@@ -48,7 +49,7 @@ for vol_idx in range(num_volumes):
     fig, ax = plt.subplots(figsize=(6, 6))
 
     # Set slice to 11 for both the mean and processed image
-    slice_idx = 10  # Fixed slice 11
+    slice_idx = slice_number  # Fixed slice 11
 
     # Flip the slices left-right (flip along the horizontal axis, axis 1)
     mean_slice = np.flip(mean_data[..., slice_idx], axis=1)
@@ -57,8 +58,16 @@ for vol_idx in range(num_volumes):
     # Plot the mean image (underlay) with slice 11
     ax.imshow(mean_slice, cmap="gray", vmin=np.min(mean_data), vmax=np.max(mean_data))
 
-    # Overlay the processed image with transparency, scaled between 2 and 7
-    ax.imshow(processed_slice, cmap="hot", alpha=0.5, vmin=2, vmax=7)  # Scale from 2 to 7
+    # Plot the combined slice using "coolwarm" colormap to represent both negative and positive values
+    im_combined = ax.imshow(processed_slice, cmap="coolwarm", alpha=0.2, vmin=-7, vmax=7)
+
+    # Add a single vertical colorbar representing both positive and negative values
+    cbar_combined = fig.colorbar(im_combined, ax=ax, orientation='vertical', fraction=0.046, pad=0.04)
+    cbar_combined.set_label('Percent Signal Change', rotation=270, labelpad=15)  # Rotate the label for a vertical bar
+
+
+    # cbar_neg = fig.colorbar(im_neg, ax=ax, fraction=0.046, pad=0.04)
+    # cbar_neg.set_label('Negative Changes', rotation=0, labelpad=15)
 
     # Set the title
     # ax.set_title(f"Overlay of Mean and Processed Image - Volume {vol_idx} (Slice 7)")
