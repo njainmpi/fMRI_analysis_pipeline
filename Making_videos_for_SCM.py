@@ -5,19 +5,14 @@ import numpy as np
 import matplotlib.pyplot as plt
 import subprocess
 
-# Step 1: Define paths
-
+# Step 1: Define paths and input parameters
 mean_image_path = sys.argv[1]
 processed_image_path = sys.argv[2]
-slice_number = int(sys.argv[3])
+slice_numbers = list(map(int, sys.argv[3:]))  # List of slice numbers as input
 output_dir = "overlay_screenshots"
-movie_output = "Signal_Change_Map.mp4"
+movie_output = f"Signal_Change_Map_Slice{slice_numbers}.mp4"
 
-
-# Step 2: Create output directory for screenshots
-os.makedirs(output_dir, exist_ok=True)
-
-# Step 3: Load the mean image and processed image
+# Step 2: Load the mean image and processed image
 mean_img = nib.load(mean_image_path)
 processed_img = nib.load(processed_image_path)
 
@@ -40,57 +35,55 @@ if mean_data.shape != processed_data.shape[:3]:
 # Get the number of volumes in the processed image
 num_volumes = processed_data.shape[3]
 
-# Step 4: Scroll through each volume and overlay on the mean image
-for vol_idx in range(num_volumes):
-    # Extract the current volume of the processed image
-    processed_volume = processed_data[..., vol_idx]
+# Step 3: Process each slice number individually
+for slice_number in slice_numbers:
+    print(f"Processing slice {slice_number}...")
 
-    # Overlay: Plot the mean image and processed volume in the same plot
-    fig, ax = plt.subplots(figsize=(6, 6))
+    # Create a separate output directory for each slice
+    slice_output_dir = os.path.join(output_dir, f"slice_{slice_number}")
+    os.makedirs(slice_output_dir, exist_ok=True)
 
-    # Set slice to 11 for both the mean and processed image
-    slice_idx = slice_number  # Fixed slice 11
-
-    # Flip the slices left-right (flip along the horizontal axis, axis 1)
-    mean_slice = np.flip(mean_data[..., slice_idx], axis=1)
-    processed_slice = np.flip(processed_volume[..., slice_idx], axis=1)
-
-    # Plot the mean image (underlay) with slice 11
-    ax.imshow(mean_slice, cmap="gray", vmin=np.min(mean_data), vmax=np.max(mean_data))
-
-    # Plot the combined slice using "coolwarm" colormap to represent both negative and positive values
-    im_combined = ax.imshow(processed_slice, cmap="coolwarm", alpha=0.2, vmin=-7, vmax=7)
-
-    # Add a single vertical colorbar representing both positive and negative values
-    cbar_combined = fig.colorbar(im_combined, ax=ax, orientation='vertical', fraction=0.046, pad=0.04)
-    cbar_combined.set_label('Percent Signal Change', rotation=270, labelpad=15)  # Rotate the label for a vertical bar
-
-
-    # cbar_neg = fig.colorbar(im_neg, ax=ax, fraction=0.046, pad=0.04)
-    # cbar_neg.set_label('Negative Changes', rotation=0, labelpad=15)
-
-    # Set the title
-    # ax.set_title(f"Overlay of Mean and Processed Image - Volume {vol_idx} (Slice 7)")
-    # ax.axis('off')  # Hide axes for a cleaner look
-
-    # Save the screenshot
-    screenshot_path = os.path.join(output_dir, f"frame_{vol_idx}.png")
-    plt.savefig(screenshot_path, bbox_inches='tight', pad_inches=0)
-    plt.close()
-
-    print(f"Captured overlay for volume {vol_idx}")
-
-# Step 5: Use ffmpeg to combine the frames into an MP4 movie, resizing to make dimensions divisible by 2 and rotating by 90 degrees anti-clockwise
-subprocess.run([
-    "ffmpeg", "-framerate", "4", "-i", f"{output_dir}/frame_%d.png",
-    "-vf", "scale=trunc(iw/2)*2:trunc(ih/2)*2,transpose=2",  # Rotate 90 degrees anti-clockwise using transpose=2
-    "-c:v", "libx264", "-pix_fmt", "yuv420p", movie_output 
+    # Define the movie output filename for the current slice
    
-])
 
-print(f"Movie created and saved as {movie_output}")
+    # Step 4: Scroll through each volume and overlay on the mean image
+    for vol_idx in range(num_volumes):
+        # Extract the current volume of the processed image
+        processed_volume = processed_data[..., vol_idx]
 
+        # Overlay: Plot the mean image and processed volume in the same plot
+        fig, ax = plt.subplots(figsize=(6, 6))
 
-# Optionally, clean up frame images
-# for filename in os.listdir(output_dir):
-#     os.remove(os.path.join(output_dir, filename))
+        # Flip the slices left-right (flip along the horizontal axis, axis 1)
+        mean_slice = np.flip(mean_data[..., slice_number], axis=1)
+        processed_slice = np.flip(processed_volume[..., slice_number], axis=1)
+
+        # Plot the mean image (underlay)
+        ax.imshow(mean_slice, cmap="gray", vmin=np.min(mean_data), vmax=np.max(mean_data))
+
+        # Plot the processed slice overlay
+        im_combined = ax.imshow(processed_slice, cmap="hot", alpha=0.3, vmin=0, vmax=7)
+
+        # Add a colorbar for signal change
+        cbar_combined = fig.colorbar(im_combined, ax=ax, orientation='vertical', fraction=0.046, pad=0.04)
+        cbar_combined.set_label('Percent Signal Change', rotation=270, labelpad=15)
+
+        # Save the screenshot
+        screenshot_path = os.path.join(slice_output_dir, f"frame_{vol_idx}.png")
+        plt.savefig(screenshot_path, bbox_inches='tight', pad_inches=0)
+        plt.close()
+
+        print(f"Captured overlay for volume {vol_idx} in slice {slice_number}")
+
+    # Step 5: Use ffmpeg to combine the frames into an MP4 movie for each slice
+    subprocess.run([
+        "ffmpeg", "-framerate", "4", "-i", f"{slice_output_dir}/frame_%d.png",
+        "-vf", "scale=trunc(iw/2)*2:trunc(ih/2)*2,transpose=2",  # Rotate 90 degrees anti-clockwise
+        "-c:v", "libx264", "-pix_fmt", "yuv420p", movie_output
+    ])
+
+    print(f"Movie created and saved as {movie_output} for slice {slice_number}")
+
+    # Optionally, clean up frame images
+    # for filename in os.listdir(slice_output_dir):
+    #     os.remove(os.path.join(slice_output_dir, filename))
