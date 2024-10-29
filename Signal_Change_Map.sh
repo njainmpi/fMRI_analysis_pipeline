@@ -37,7 +37,7 @@ SIGNAL_CHANGE_MAPS () {
         
         mask_image="mask_${input_4d_nifti}"  # Binary mask file
         output_smoothed="s${input_4d_nifti}" # Output smoothed file
-        fwhm=1                               # Full-width half-maximum for Gaussian smoothing (in mm)
+        fwhm=0                               # Full-width half-maximum for Gaussian smoothing (in mm)
         output_dir="frames"                  # Directory to store screenshot frames
         movie_output="final_movie.mp4"       # Name of the output movie file
 

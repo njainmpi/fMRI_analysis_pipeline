@@ -34,10 +34,10 @@ for datasets in "${indices[@]}"; do
     echo "Dataset Currently Being Analysed is": $DatasetName
 
     #Locate the source of Raw Data on the server, this needs to be changed by the user based on the paths defined in their system#
-    # Raw_Data_Path="/Volumes/pr_ohlendorf/fMRI/Project1_CBV_fMRI_NJ/RawData/$DatasetName"
+    Raw_Data_Path="/Volumes/pr_ohlendorf/fMRI/Project1_CBV_fMRI_NJ/RawData/$DatasetName"
     # Analysed_Data_Path="/Volumes/pr_ohlendorf/fMRI/Project1_CBV_fMRI_NJ/AnalysedData/$DatasetName"
   
-    Raw_Data_Path="/Users/njain/Desktop/$DatasetName"
+    # Raw_Data_Path="/Users/njain/Desktop/$DatasetName"
     Analysed_Data_Path="/Users/njain/Desktop/MPI/$DatasetName"
     
     CHECK_FILE_EXISTENCE $Analysed_Data_Path
