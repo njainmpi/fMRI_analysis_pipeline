@@ -97,13 +97,13 @@ for datasets in "${indices[@]}"; do
                     # SLICE_TIMING_CORRECTION G1_cp.nii.gz #15.08.2024 updated to perform slice timing correction
                     MOTION_CORRECTION $MiddleVolume G1_cp.nii.gz
                     CHECK_SPIKES mc_stc_func+orig
-                    
+                    TEMPORAL_SNR_using_AFNI mc_stc_func+orig
+                    SMOOTHING_using_FSL mc_stc_func+orig
+
                     if [ $TaskDuration == $NoOfRepetitions ]; then
                         echo "It is Stimulated Scan with a total of $NoOfRepetitions Repetitions"
-                        tag -a "Functional" "$Analysed_Data_Path/$runnames''$SequenceName" #14.08.2024 tagging a folder as functional scan 
+                                              
                         
-                        TEMPORAL_SNR_using_AFNI mc_stc_func+orig
-                        SMOOTHING_using_AFNI mc_stc_func+orig
                         STIMULUS_TIMING_CREATION $NoOfEpochs $BlockLength $Baseline_TRs stimulus_times.txt #16.08.2024 creating epoch times
                         ACTIVATION_MAPS sm_mc_stc_func+orig stimulus_times.txt 6 stats_offset_sm_mc_stc_func #16.08.2024 adding a function to estimate activation maps from the data      
                         
@@ -123,9 +123,8 @@ for datasets in "${indices[@]}"; do
                         # TIME_SERIES $Analysed_Data_Path/$runnames''$SequenceName/NIFTI_file_header_info.txt
             
                     else
-                        echo "It is a Baseline Scan with a total of $NoOfRepetitions Repetitions"
-                        # TEMPORAL_SNR rG1_fsl.nii.gz
-                        SMOOTHING $Raw_Data_Path/$runnames/method
+                        echo "It is a Baseline/ rs-fMRI Scan with a total of $NoOfRepetitions Repetitions"
+
                     fi
                 
                 else 
