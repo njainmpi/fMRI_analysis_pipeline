@@ -17,7 +17,7 @@ source ./time_series_function.sh
 source ./activation_maps.sh # to map areas of activation using AFNI, also generates signal change maps
 source ./outlier_count.sh #14.08.2024 new function to perfom slice timing correction and outlier estimate before and after slice timing correction
 source ./video_making.sh #19.08.2024 new function to make videos of the signal change maps
-
+source ./func_parameters_extraction.sh
 
 # chmod +x ./Functions_Bash/*
 
@@ -55,10 +55,11 @@ for datasets in "${indices[@]}"; do
 
         Raw_Data_Path_Run="$Raw_Data_Path/$runnames"
             
+        FUNC_PARAM_EXTARCT $Raw_Data_Path_Run
 
-        Sequence="`grep -A1 'ACQ_protocol_name=( 64 )' $Raw_Data_Path_Run/acqp | grep -v -e 'ACQ_protocol_name=( 64 )' -e '--'`"
-        #here the grep command will read the no of slices from the Bruker raw file acquired during acquisiton
-        SequenceName=$(echo "$Sequence" | sed 's/[<>]//g')
+        # Sequence="`grep -A1 'ACQ_protocol_name=( 64 )' $Raw_Data_Path_Run/acqp | grep -v -e 'ACQ_protocol_name=( 64 )' -e '--'`"
+        # #here the grep command will read the no of slices from the Bruker raw file acquired during acquisiton
+        # SequenceName=$(echo "$Sequence" | sed 's/[<>]//g')
 
         CHECK_FILE_EXISTENCE $Analysed_Data_Path/$runnames''$SequenceName
         if [ $? -eq 1 ]; then
@@ -81,13 +82,13 @@ for datasets in "${indices[@]}"; do
 
             BRUKER_to_NIFTI $Raw_Data_Path $runnames $Raw_Data_Path/$runnames/method
 
-            NoOfRepetitions=$(awk '/PVM_NRepetitions=/ {print substr($0,21,3)}' $Raw_Data_Path_Run/method)
-            TotalScanTime=$(awk '/PVM_ScanTime=/ {print substr($0,17,6)}' $Raw_Data_Path_Run/method)
-            #here the awk will look at the number of slices acquired using the information located in the methods file    
+            # NoOfRepetitions=$(awk '/PVM_NRepetitions=/ {print substr($0,21,3)}' $Raw_Data_Path_Run/method)
+            # TotalScanTime=$(awk '/PVM_ScanTime=/ {print substr($0,17,6)}' $Raw_Data_Path_Run/method)
+            # #here the awk will look at the number of slices acquired using the information located in the methods file    
                 
-            # 07.08.2024 Estimating Volume TR
-            VolTR_msec=$(echo "scale=0; $TotalScanTime/$NoOfRepetitions" | bc)
-            VolTR=$(echo "scale=0; $VolTR_msec/1000" | bc)
+            # # 07.08.2024 Estimating Volume TR
+            # VolTR_msec=$(echo "scale=0; $TotalScanTime/$NoOfRepetitions" | bc)
+            # VolTR=$(echo "scale=0; $VolTR_msec/1000" | bc)
 
             if [ "$NoOfRepetitions" == "1" ]; then
                 echo "It is a Structural Scan acquired using $SequenceName"
@@ -100,10 +101,10 @@ for datasets in "${indices[@]}"; do
                 if grep -q "PreBaselineNum" "$Raw_Data_Path_Run/method"; then
                     echo "It is either a functional or baseline scan"
                         
-                    Baseline_TRs=$(awk '/PreBaselineNum=/ {print substr($0,19,3)}' $Raw_Data_Path_Run/method)
-                    StimOn_TRs=$(awk '/StimNum=/ {print substr($0,12,2); exit}' $Raw_Data_Path_Run/method)  
-                    StimOff_TRs=$(awk '/InterStimNum=/ {print substr($0,17)}' $Raw_Data_Path_Run/method)  
-                    NoOfEpochs=$(awk '/NEpochs=/ {print substr($0,12)}' $Raw_Data_Path_Run/method)  
+                    # Baseline_TRs=$(awk '/PreBaselineNum=/ {print substr($0,19,3)}' $Raw_Data_Path_Run/method)
+                    # StimOn_TRs=$(awk '/StimNum=/ {print substr($0,12,2); exit}' $Raw_Data_Path_Run/method)  
+                    # StimOff_TRs=$(awk '/InterStimNum=/ {print substr($0,17)}' $Raw_Data_Path_Run/method)  
+                    # NoOfEpochs=$(awk '/NEpochs=/ {print substr($0,12)}' $Raw_Data_Path_Run/method)  
                     
                     TaskDuration=$(echo "$Baseline_TRs + ($StimOn_TRs + $StimOff_TRs) * $NoOfEpochs" | bc)
                     
@@ -113,7 +114,7 @@ for datasets in "${indices[@]}"; do
                     # SLICE_TIMING_CORRECTION G1_cp.nii.gz #15.08.2024 updated to perform slice timing correction
                     MOTION_CORRECTION $MiddleVolume G1_cp.nii.gz
                     CHECK_SPIKES mc_stc_func+orig
-
+                    
                     if [ $TaskDuration == $NoOfRepetitions ]; then
                         echo "It is Stimulated Scan with a total of $NoOfRepetitions Repetitions"
                         tag -a "Functional" "$Analysed_Data_Path/$runnames''$SequenceName" #14.08.2024 tagging a folder as functional scan 
