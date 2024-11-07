@@ -1,10 +1,16 @@
+# This function is made by $$Naman Jain$$ on 30.10.2024 to estimate PSD of the functional data
+
+
 import nibabel as nib
+import sys
 import numpy as np
 from scipy.signal import welch, detrend
 import matplotlib.pyplot as plt
 
 # Load the .nii.gz file
-fmri_img = nib.load('G1_cp.nii.gz')
+fmri_filename = sys.argv[1]
+
+fmri_img = nib.load(fmri_filename)
 fmri_data = fmri_img.get_fdata()
 
 # Check data shape
@@ -12,7 +18,7 @@ print("fMRI data shape:", fmri_data.shape)
 # Expected shape should be (x, y, z, t), where t=1800 (repetitions)
 
 # Define the repetition time (TR) in seconds, typically known from acquisition details.
-TR = 1.0  # Example TR; replace with actual TR if known
+TR = 2.0  # Example TR; replace with actual TR if known
 n_reps = fmri_data.shape[-1]
 
 # Step 2: Extract the mean time series from all voxels
