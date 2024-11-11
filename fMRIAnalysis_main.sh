@@ -10,7 +10,6 @@
 #14.08.2024 assigning tags to the folders if they are structural or functional
 #07.11.2024 all functions to be called are sourced in one file
 
-
 source ./All_functions_to_be_called.sh
 
 ## Main Script Starts from here
@@ -62,8 +61,7 @@ for datasets in "${indices[@]}"; do
         
         if echo "$SequenceName" | grep -q "$word_to_check"; then
             echo "This data is acquired using '$word_to_check'. This will not be analyzed."
-            tag -a "Localizer" "$Analysed_Data_Path/$runnames''$SequenceName" #14.08.2024 tagging a folder as localizer
- 
+            
         else
             echo "This data is not acquired using $word_to_check"
 
@@ -71,7 +69,7 @@ for datasets in "${indices[@]}"; do
 
             if [ "$NoOfRepetitions" == "1" ]; then
                 echo "It is a Structural Scan acquired using $SequenceName"
-                tag -a "Anatomical" "$Analysed_Data_Path/$runnames''$SequenceName" #14.08.2024 tagging a folder as anatomical scan
+                
             else 
                 echo "It is an fMRI scan"
                 echo  "*************Checking for Test Scan or Functional Scan*************"
@@ -86,14 +84,13 @@ for datasets in "${indices[@]}"; do
                     MiddleVolume=$(($NoOfRepetitions / 2))
                         
                     # SLICE_TIMING_CORRECTION G1_cp.nii.gz #15.08.2024 updated to perform slice timing correction
-                    MOTION_CORRECTION $MiddleVolume G1_cp.nii.gz
+                    MOTION_CORRECTION $MiddleVolume G1_cp.nii.gz mc_func
                     CHECK_SPIKES mc_stc_func+orig
                     TEMPORAL_SNR_using_AFNI mc_stc_func+orig
                     SMOOTHING_using_FSL mc_stc_func+orig
 
                     if [ $TaskDuration == $NoOfRepetitions ]; then
                         echo "It is Stimulated Scan with a total of $NoOfRepetitions Repetitions"
-                                              
                         
                         STIMULUS_TIMING_CREATION $NoOfEpochs $BlockLength $Baseline_TRs stimulus_times.txt #16.08.2024 creating epoch times
                         ACTIVATION_MAPS sm_mc_stc_func+orig stimulus_times.txt 6 stats_offset_sm_mc_stc_func #16.08.2024 adding a function to estimate activation maps from the data      
