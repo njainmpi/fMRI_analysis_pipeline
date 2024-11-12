@@ -30,19 +30,23 @@ QUALITY_CHECK () {
     fsl_motion_outliers -i $2 -o rest_outlier_dvars_EV.txt -s rest_motion_dvars.txt -p rest_motion_dvars.png --dvars --nomoco
     fsl_motion_outliers -i $2 -o rest_outlier_fd_EV.txt -s rest_motion_fd.txt -p rest_motion_fd.png --fd
 
+    #Create a mask for data analysis
+    fslmaths $3 -Tmean mean_image
+    fslmaths mean_mask_image.nii.gz -thrp 45 -bin mean_image_mask.nii.gz
+    echo "Please clean up the mask image"
+    fsleyes mean_image mean_image_mask.nii.gz
 
-    ## Calculate temporal SNR (tSNR) before and after motion correction:
-    fslmaths $2 -Tstd fMRI_std
-    fslmaths $2 -Tmean fMRI_mean
-    fslmaths fMRI_mean.nii.gz -div fMRI_std.nii.gz fMRI_tSNR
+    ## Calculate temporal SNR (tSNR) before correction:
+    fslmaths $2 -mas mean_image_mask_cleaned.nii.gz -Tstd raw_fMRI_std
+    fslmaths $2 -mas mean_image_mask_cleaned.nii.gz -Tmean raw_fMRI_mean
+    fslmaths raw_fMRI_mean.nii.gz -div raw_fMRI_std.nii.gz raw_fMRI_tSNR
 
-    fslmaths $3 -Tstd mc_fMRI_std
-    fslmaths $3 -Tmean mc_fMRI_mean
+    ## Calculate temporal SNR (tSNR) after correction:
+    fslmaths $3 -mas mean_image_mask_cleaned.nii.gz -Tstd mc_fMRI_std
+    fslmaths $3 -mas mean_image_mask_cleaned.nii.gz -Tmean mc_fMRI_mean
     fslmaths mc_fMRI_mean.nii.gz -div mc_fMRI_std.nii.gz mc_fMRI_tSNR
 
-
-    fslmaths $2 -thrp 45 -bin fMRI_snr_mask.nii.gz
-    fslstats -K fMRI_snr_mask.nii.gz fMRI_tSNR.nii.gz -n -m > mean_tSNR_fMRI.txt
-    fslstats -K fMRI_snr_mask.nii.gz mc_fMRI_tSNR.nii.gz -n -m > mean_tSNR_mc_fMRI.txt
+    fslstats -K mean_image_mask_cleaned.nii.gz raw_fMRI_tSNR.nii.gz -n -m > raw_fMRI_tSNR_mean.txt
+    fslstats -K mean_image_mask_cleaned.nii.gz mc_fMRI_tSNR.nii.gz -n -m > mc_fMRI_tSNR_mean.txt
 
 }
