@@ -16,7 +16,8 @@ source ./All_functions_to_be_called.sh
 # File_with_Dataset_Names="/Volumes/pr_ohlendorf/fMRI/Project1_CBV_fMRI_NJ/RawData/DatasetNames.txt"
 File_with_Dataset_Names="/Users/njain/Desktop/data.txt"
 
-indices=(1) #enter the index number of the file name that you would like to analyse
+indices=(6) #enter the index number of the file name that you would like to analyse
+echo $indices
 
 for datasets in "${indices[@]}"; do
     
@@ -85,9 +86,9 @@ for datasets in "${indices[@]}"; do
                         
                     # SLICE_TIMING_CORRECTION G1_cp.nii.gz #15.08.2024 updated to perform slice timing correction
                     MOTION_CORRECTION $MiddleVolume G1_cp.nii.gz mc_func
-                    CHECK_SPIKES mc_stc_func+orig
-                    TEMPORAL_SNR_using_AFNI mc_stc_func+orig
-                    SMOOTHING_using_FSL mc_stc_func+orig
+                    CHECK_SPIKES mc_func+orig
+                    TEMPORAL_SNR_using_AFNI mc_func+orig
+                    SMOOTHING_using_FSL mc_func+orig
 
                     if [ $TaskDuration == $NoOfRepetitions ]; then
                         echo "It is Stimulated Scan with a total of $NoOfRepetitions Repetitions"
