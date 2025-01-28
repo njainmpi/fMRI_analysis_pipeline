@@ -37,6 +37,33 @@ for ii in range(num_cols):
     baseline_mean = np.mean(data[:550, ii])
     data_PSC_mc[:, ii] = ((data[:, ii] - baseline_mean) / baseline_mean) * 100
     
+
+
+# Save data_PSC_mc as a text file
+output_file = "data_PSC_mc.txt"
+np.savetxt(output_file, data_PSC_mc, delimiter=',')
+print(f"PSC data saved to {output_file}")
+
+# Plot all columns in one graph
+plt.figure(figsize=(10, 6))
+for ii in range(num_cols):
+    plt.plot(data_PSC_mc[:, ii], color=colors[ii], label=f'Column {ii+1}')
+
+plt.title('Percent Signal Change (PSC) for All Columns')
+plt.xlabel('Volumes')
+plt.ylabel('Percent Signal Change (%)')
+# plt.legend(loc='upper right', fontsize='small', ncol=2, bbox_to_anchor=(1.15, 1))
+plt.tight_layout()
+
+# Save the plot as an image
+plot_file = "PSC_plot.png"
+plt.savefig(plot_file)
+print(f"Plot saved to {plot_file}")
+
+# Show the plot
+plt.show()
+
+
 num_rows_psc, num_cols_psc = data_PSC_mc.shape
 print(f"The new text file has {num_rows_psc} rows and {num_cols_psc} columns.")
 

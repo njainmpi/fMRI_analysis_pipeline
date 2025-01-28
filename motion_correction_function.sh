@@ -5,8 +5,10 @@
                                
 
 #Function 1
+
+
 MOTION_CORRECTION () {
-    
+      
     3dvolreg -prefix $3 -base $1 -verbose -1Dfile motion.1D -1Dmatrix_save mats -linear -twopass -float -maxdisp1D rmsabs.1D $2
     3dAFNItoNIFTI $3'+orig.BRIK'
     gzip -1 mc_func.nii 
