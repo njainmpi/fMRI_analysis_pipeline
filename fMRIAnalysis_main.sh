@@ -39,11 +39,14 @@ for datasets in "${indices[@]}"; do
     echo "Dataset Currently Being Analysed is": $DatasetName
 
     #Locate the source of Raw Data on the server, this needs to be changed by the user based on the paths defined in their system#
-    Raw_Data_Path="/Volumes/pr_ohlendorf/fMRI/Project1_SeroAVATar_NJ_KR/RawData/$DatasetName"
-    Analysed_Data_Path="/Volumes/pr_ohlendorf/fMRI/Project1_SeroAVATar_NJ_KR/AnalysedData/$DatasetName"
+    # Raw_Data_Path="/Volumes/pr_ohlendorf/fMRI/Project1_SeroAVATar_NJ_KR/RawData/$DatasetName"
+    # Analysed_Data_Path="/Volumes/pr_ohlendorf/fMRI/Project1_SeroAVATar_NJ_KR/AnalysedData/$DatasetName"
+
+    Raw_Data_Path="/Users/njain/Desktop/$DatasetName"
+    Analysed_Data_Path="/Users/njain/Desktop/test/$DatasetName"
 
     LOG_DIR="$Analysed_Data_Path/Data_Analysis_log" # Define the log directory where you want to store the script.
-
+    user=$(whoami)
     log_execution "$LOG_DIR" || exit 1
 
     # # Your data analysis logic goes here
@@ -53,8 +56,7 @@ for datasets in "${indices[@]}"; do
     # printf "Data analysis completed.\n"
 
 
-    # Raw_Data_Path="/Users/njain/Desktop/$DatasetName"
-    # Analysed_Data_Path="/Users/njain/Desktop/test/$DatasetName"
+   
     
     CHECK_FILE_EXISTENCE $Analysed_Data_Path
    
@@ -110,19 +112,19 @@ for datasets in "${indices[@]}"; do
                     MiddleVolume=$(($NoOfRepetitions / 2))
                         
                     # SLICE_TIMING_CORRECTION G1_cp.nii.gz #15.08.2024 updated to perform slice timing correction
-                    log_function_execution "$LOG_DIR" "Motion Correction using AFNI executed" || exit 1
+                    log_function_execution "$LOG_DIR" "Motion Correction using AFNI executed on Run Number $runnames acquired using $SequenceName"|| exit 1
                     MOTION_CORRECTION $MiddleVolume G1_cp.nii.gz mc_func
                     
-                    log_function_execution "$LOG_DIR" "Checked for presence of spikes in the data" || exit 1
+                    log_function_execution "$LOG_DIR" "Checked for presence of spikes in the data" "$runnames''$SequenceName"|| exit 1
                     CHECK_SPIKES mc_func+orig
 
-                    log_function_execution "$LOG_DIR" "Temporal SNR estimated" || exit 1
+                    log_function_execution "$LOG_DIR" "Temporal SNR estimated" "$runnames''$SequenceName"|| exit 1
                     TEMPORAL_SNR_using_AFNI mc_func+orig
 
-                    log_function_execution "$LOG_DIR" "Smoothing using FSL executed" || exit 1
+                    log_function_execution "$LOG_DIR" "Smoothing using FSL executed" "$runnames''$SequenceName"|| exit 1
                     SMOOTHING_using_FSL mc_func+orig
 
-                    
+
 
                     if [ $TaskDuration == $NoOfRepetitions ]; then
                         echo "It is Stimulated Scan with a total of $NoOfRepetitions Repetitions"
