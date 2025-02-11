@@ -62,7 +62,7 @@ for slice_number in slice_numbers:
         ax.imshow(mean_slice, cmap="gray", vmin=np.min(mean_data), vmax=np.max(mean_data))
 
         # Plot the processed slice overlay
-        im_combined = ax.imshow(processed_slice, cmap="hot", alpha=0.3, vmin=0, vmax=15)
+        im_combined = ax.imshow(processed_slice, cmap="hot", alpha=0.4, vmin=0, vmax=20)
 
         # Add a colorbar for signal change
         cbar_combined = fig.colorbar(im_combined, ax=ax, orientation='vertical', fraction=0.046, pad=0.04)

@@ -24,14 +24,13 @@ source ./outlier_count.sh #14.08.2024 new function to perfom slice timing correc
 source ./video_making.sh #19.08.2024 new function to make videos of the signal change maps
 source ./func_parameters_extraction.sh #07.11.2024 new function to extract parameters for fMRI analysis
 source ./bash_log_create.sh #28.01.2025 creating logs for everytime you run bash scripts
-
+source ./Signal_Change_Map.sh
 
 ## Main Script Starts from here
 # File_with_Dataset_Names="/Volumes/pr_ohlendorf/fMRI/Project1_CBV_fMRI_NJ/RawData/DatasetNames.txt"
 File_with_Dataset_Names="/Users/njain/Desktop/data.txt"
 
 indices=(1) #enter the index number of the file name that you would like to analyse
-echo $indices
 
 for datasets in "${indices[@]}"; do
     
@@ -45,26 +44,17 @@ for datasets in "${indices[@]}"; do
     Raw_Data_Path="/Users/njain/Desktop/$DatasetName"
     Analysed_Data_Path="/Users/njain/Desktop/test/$DatasetName"
 
-    LOG_DIR="$Analysed_Data_Path/Data_Analysis_log" # Define the log directory where you want to store the script.
+    LOG_DIR="$Raw_Data_Path/Data_Analysis_log" # Define the log directory where you want to store the script.
     user=$(whoami)
     log_execution "$LOG_DIR" || exit 1
 
-    # # Your data analysis logic goes here
-    # printf "Running data analysis...\n"
-    # # Simulating analysis process
-    # sleep 2
-    # printf "Data analysis completed.\n"
-
-
-   
-    
     CHECK_FILE_EXISTENCE $Analysed_Data_Path
    
     cd $Raw_Data_Path
 
     for runnames in *; do #31.07.2024 instead of adding run numbers the code picks all the run numbers automatically located in the folder
-   
-        echo $runnames
+    # if [[ $runname =~ ^[0-9]+$ ]]; then
+       
         echo ""
         echo ""
         echo "Currently Analysing Run Number: $runnames"
@@ -75,70 +65,40 @@ for datasets in "${indices[@]}"; do
             
         FUNC_PARAM_EXTARCT $Raw_Data_Path_Run
 
-        CHECK_FILE_EXISTENCE $Analysed_Data_Path/$runnames''$SequenceName
-        if [ $? -eq 1 ]; then
-            echo "Run already analysed, moving to next run"
-            continue
-        fi
-            cd $Analysed_Data_Path/$runnames''$SequenceName
-
-        #31.07.2024: Adding a loop to check for Localizer scans and separrate them from other used sequences
-
-        word_to_check="Localizer"
-        echo $SequenceName
-        
+        word_to_check="1_Localizer"
+                
         if echo "$SequenceName" | grep -q "$word_to_check"; then
             echo "This data is acquired using '$word_to_check'. This will not be analyzed."
             
         else
-            echo "This data is not acquired using $word_to_check"
+            echo "This data is acquired using $SequenceName"
+
+            CHECK_FILE_EXISTENCE "$Analysed_Data_Path/$runnames$SequenceName"
+            cd $Analysed_Data_Path/$runnames''$SequenceName
 
             BRUKER_to_NIFTI $Raw_Data_Path $runnames $Raw_Data_Path/$runnames/method
 
             if [ "$NoOfRepetitions" == "1" ]; then
-                echo "It is a Structural Scan acquired using $SequenceName"
+                echo "It is a Structural Scan or Test Scan acquired using $SequenceName"
                 
-            else 
+            else
                 echo "It is an fMRI scan"
-                echo  "*************Checking for Test Scan or Functional Scan*************"
-                  
-                    
+                                  
                 if grep -q "PreBaselineNum" "$Raw_Data_Path_Run/method"; then
-                    echo "It is either a functional or baseline scan"
+                    echo "It is a baseline scan"
                     
                     TaskDuration=$(echo "$Baseline_TRs + ($StimOn_TRs + $StimOff_TRs) * $NoOfEpochs" | bc)
                     
                     BlockLength=$(($StimOn_TRs + $StimOff_TRs))
                     MiddleVolume=$(($NoOfRepetitions / 2))
                         
-                    # SLICE_TIMING_CORRECTION G1_cp.nii.gz #15.08.2024 updated to perform slice timing correction
-                    log_function_execution "$LOG_DIR" "Motion Correction using AFNI executed on Run Number $runnames acquired using $SequenceName"|| exit 1
-                    MOTION_CORRECTION $MiddleVolume G1_cp.nii.gz mc_func
-                    
-                    log_function_execution "$LOG_DIR" "Checked for presence of spikes in the data" "$runnames''$SequenceName"|| exit 1
-                    CHECK_SPIKES mc_func+orig
-
-                    log_function_execution "$LOG_DIR" "Temporal SNR estimated" "$runnames''$SequenceName"|| exit 1
-                    TEMPORAL_SNR_using_AFNI mc_func+orig
-
-                    log_function_execution "$LOG_DIR" "Smoothing using FSL executed" "$runnames''$SequenceName"|| exit 1
-                    SMOOTHING_using_FSL mc_func+orig
-
-
-
                     if [ $TaskDuration == $NoOfRepetitions ]; then
                         echo "It is Stimulated Scan with a total of $NoOfRepetitions Repetitions"
                         
                         STIMULUS_TIMING_CREATION $NoOfEpochs $BlockLength $Baseline_TRs stimulus_times.txt #16.08.2024 creating epoch times
                         ACTIVATION_MAPS sm_mc_stc_func+orig stimulus_times.txt 6 stats_offset_sm_mc_stc_func #16.08.2024 adding a function to estimate activation maps from the data      
                         
-                        CHECK_FILE_EXISTENCE Signal_Change_Map
                         
-                        cd Signal_Change_Map
-                        SIGNAL_CHANGE_MAPS ../G1_cp.nii.gz # 16.10.2024 creating signal change maps
-                        cd ..
-                                                
-                        # THRESHOLDING signal_change_map+orig 0.5 6.0 signal_change_map_threshholded.nii.gz # 19.08.2024 added a function to threshhold images, here we threshhold signal change maps
                         
                         # CHECK_FILE_EXISTENCE TimeSeiesVoxels
                 
@@ -150,6 +110,21 @@ for datasets in "${indices[@]}"; do
                     else
                         echo "It is a Baseline/ rs-fMRI Scan with a total of $NoOfRepetitions Repetitions"
 
+                        # log_function_execution "$LOG_DIR" "Motion Correction using AFNI executed on Run Number $runnames acquired using $SequenceName"|| exit 1
+                        # MOTION_CORRECTION $MiddleVolume G1_cp.nii.gz mc_func
+                    
+                        # log_function_execution "$LOG_DIR" "Checked for presence of spikes in the data on Run Number $runnames acquired using $SequenceName"|| exit 1
+                        # CHECK_SPIKES mc_func+orig
+
+                        # log_function_execution "$LOG_DIR" "Temporal SNR estimated on Run Number $runnames acquired using $SequenceName"|| exit 1
+                        # TEMPORAL_SNR_using_AFNI mc_func+orig
+
+                        # log_function_execution "$LOG_DIR" "Smoothing using FSL executed on Run Number $runnames acquired using $SequenceName"|| exit 1
+                        # SMOOTHING_using_FSL mc_func.nii.gz
+
+                        log_function_execution "$LOG_DIR" "Signal Change Map created for Run Number $runnames acquired using $SequenceName"|| exit 1
+                        SIGNAL_CHANGE_MAPS mc_func.nii.gz 100 500 $Raw_Data_Path_Run 10 10 mean_mc_func.nii.gz
+
                     fi
                 
                 else 
@@ -160,7 +135,14 @@ for datasets in "${indices[@]}"; do
             fi
         
         fi
-
+    # fi
+    # exit
     done 
-   
+
 done
+
+
+   # if [ $? -eq 1 ]; then
+        #     echo "Run already analysed, moving to next run"
+        #     continue
+        # fi
