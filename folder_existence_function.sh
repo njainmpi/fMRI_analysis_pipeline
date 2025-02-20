@@ -13,5 +13,6 @@ CHECK_FILE_EXISTENCE () {
         else 
             mkdir $1
             return 0
-    fi
+        fi
+
 }

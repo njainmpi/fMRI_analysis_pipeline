@@ -9,8 +9,11 @@ FUNC_PARAM_EXTARCT () {
     #here the grep command will read the no of slices from the Bruker raw file acquired during acquisiton
     SequenceName=$(echo "$Sequence" | sed 's/[<>]//g')
     
-    NoOfRepetitions=$(awk '/PVM_NRepetitions=/ {print substr($0,21,3)}' $1/method)
-    TotalScanTime=$(awk '/PVM_ScanTime=/ {print substr($0,17,6)}' $1/method)
+    # NoOfRepetitions=$(awk '/PVM_NRepetitions=/ {print substr($0,21,4)}' $1/method)
+    NoOfRepetitions=$(awk -F'=' '/##\$PVM_NRepetitions=/{print $2}' $1/method)
+    TotalScanTime=$(awk -F'=' '/##\$PVM_ScanTime=/{print $2}' $1/method)
+
+    # TotalScanTime=$(awk '/PVM_ScanTime=/ {print substr($0,17,6)}' $1/method)
     #here the awk will look at the number of slices acquired using the information located in the methods file    
                     
     # 07.08.2024 Estimating Volume TR

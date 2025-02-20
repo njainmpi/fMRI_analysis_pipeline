@@ -13,10 +13,12 @@ TEMPORAL_SNR_using_FSL () {
 }
 
 TEMPORAL_SNR_using_AFNI () {
-    3dTstat -mean -prefix mean_mc_stc_func+orig $1
-    3dTstat -stdev -prefix std_mc_stc_func+orig $1
-    3dcalc -a mean_mc_stc_func+orig -b std_mc_stc_func+orig -expr 'a/b' -prefix tSNR_mc_stc_func+orig
-    3dAFNItoNIFTI mean_mc_stc_func+orig
+    3dTstat -mean -prefix 'mean_'$1 $1
+    3dTstat -stdev -prefix 'std_'$1 $1
+    3dcalc -a 'mean_'$1 -b 'std_'$1 -expr 'a/b' -prefix 'tSNR_'$1
+    3dAFNItoNIFTI "mean_$1" && gzip "mean_${1/+orig/.nii}"
+    3dAFNItoNIFTI "tSNR_$1" && gzip "tSNR_${1/+orig/.nii}"
+
 }
 
 #Function 2
@@ -27,7 +29,7 @@ CHECK_SPIKES () {
 
 #Function 3
 SMOOTHING_using_FSL () {
-    fslmaths rG1_fsl.nii.gz -s 0.2812 sG1_fsl.nii.gz
+    fslmaths $1 -s 1.1774 'sm_'$1
 }
 
 
