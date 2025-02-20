@@ -78,7 +78,7 @@ for slice_number in slice_numbers:
     # Step 5: Use ffmpeg to combine the frames into an MP4 movie for each slice
     subprocess.run([
         "ffmpeg", "-framerate", "4", "-i", f"{slice_output_dir}/frame_%d.png",
-        "-vf", "scale=trunc(iw/2)*2:trunc(ih/2)*2,transpose=2",  # Rotate 90 degrees anti-clockwise
+        "-vf", "scale=trunc(iw/2)*2:trunc(ih/2)*2, transpose=0",  # Rotate 90 degrees anti-clockwise
         "-c:v", "libx264", "-pix_fmt", "yuv420p", movie_output
     ])
 

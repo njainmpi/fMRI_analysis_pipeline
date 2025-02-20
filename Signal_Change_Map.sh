@@ -35,7 +35,7 @@ SIGNAL_CHANGE_MAPS () {
 
      
         # Step 1: Smooth the 4D NIfTI file (Gaussian smoothing)
-        fslmaths $input_4d_nifti -s 1.41 -fmean smoothed_4d.nii.gz
+        fslmaths $input_4d_nifti -s 0.14 -fmean smoothed_4d.nii.gz
 
         # Step 3: Apply the mask to the smoothed image
         # This ensures that the smoothing only affects the areas inside the mask
