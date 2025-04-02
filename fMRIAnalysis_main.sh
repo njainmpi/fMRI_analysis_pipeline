@@ -30,7 +30,7 @@ source ./Signal_Change_Map.sh
 # File_with_Dataset_Names="/Volumes/pr_ohlendorf/fMRI/Project1_CBV_fMRI_NJ/RawData/DatasetNames.txt"
 File_with_Dataset_Names="/Users/njain/Desktop/data.txt"
 
-indices=(2) #enter the index number of the file name that you would like to analyse
+indices=(1 2) #enter the index number of the file name that you would like to analyse
 
 for datasets in "${indices[@]}"; do
     
@@ -38,8 +38,8 @@ for datasets in "${indices[@]}"; do
     echo "Dataset Currently Being Analysed is": $DatasetName
 
     #Locate the source of Raw Data on the server, this needs to be changed by the user based on the paths defined in their system#
-    Raw_Data_Path="/Volumes/pr_ohlendorf/fMRI/Project1_SeroAVATar_NJ_KR/RawData/$DatasetName"
-    Analysed_Data_Path="/Volumes/pr_ohlendorf/fMRI/Project1_SeroAVATar_NJ_KR/AnalysedData/$DatasetName"
+    Raw_Data_Path="/Volumes/pr_ohlendorf/fMRI/RawData/Project_MMP9_NJ_MP/test_animals/$DatasetName"
+    Analysed_Data_Path="/Volumes/pr_ohlendorf/fMRI/AnalysedData/Project_MMP9_NJ_MP/test_animals/$DatasetName"
 
     # Raw_Data_Path="/Users/njain/Desktop/RawData/$DatasetName"
     # Analysed_Data_Path="/Users/njain/Desktop/AnalysedData/$DatasetName"
@@ -51,7 +51,7 @@ for datasets in "${indices[@]}"; do
     CHECK_FILE_EXISTENCE $Analysed_Data_Path
    
     cd $Raw_Data_Path
-
+    pwd
     for runnames in *; do #31.07.2024 instead of adding run numbers the code picks all the run numbers automatically located in the folder
     # if [[ $runname =~ ^[0-9]+$ ]]; then
        
@@ -110,20 +110,22 @@ for datasets in "${indices[@]}"; do
                     else
                         echo "It is a Baseline/ rs-fMRI Scan with a total of $NoOfRepetitions Repetitions"
 
-                        # log_function_execution "$LOG_DIR" "Motion Correction using AFNI executed on Run Number $runnames acquired using $SequenceName"|| exit 1
-                        # MOTION_CORRECTION $MiddleVolume G1_cp.nii.gz mc_func
+                        log_function_execution "$LOG_DIR" "Motion Correction using AFNI executed on Run Number $runnames acquired using $SequenceName"|| exit 1
+                        MOTION_CORRECTION $MiddleVolume G1_cp.nii.gz mc_func
                     
-                        # log_function_execution "$LOG_DIR" "Checked for presence of spikes in the data on Run Number $runnames acquired using $SequenceName"|| exit 1
-                        # CHECK_SPIKES mc_func+orig
+                        log_function_execution "$LOG_DIR" "Checked for presence of spikes in the data on Run Number $runnames acquired using $SequenceName"|| exit 1
+                        CHECK_SPIKES mc_func+orig
 
-                        # log_function_execution "$LOG_DIR" "Temporal SNR estimated on Run Number $runnames acquired using $SequenceName"|| exit 1
-                        # TEMPORAL_SNR_using_AFNI mc_func+orig
+                        log_function_execution "$LOG_DIR" "Temporal SNR estimated on Run Number $runnames acquired using $SequenceName"|| exit 1
+                        TEMPORAL_SNR_using_AFNI mc_func+orig
 
-                        # log_function_execution "$LOG_DIR" "Smoothing using FSL executed on Run Number $runnames acquired using $SequenceName"|| exit 1
-                        # SMOOTHING_using_FSL mc_func.nii.gz
+                        log_function_execution "$LOG_DIR" "Smoothing using FSL executed on Run Number $runnames acquired using $SequenceName"|| exit 1
+                        SMOOTHING_using_FSL mc_func.nii.gz
 
                         log_function_execution "$LOG_DIR" "Signal Change Map created for Run Number $runnames acquired using $SequenceName"|| exit 1
-                        SIGNAL_CHANGE_MAPS mc_func.nii.gz 100 500 $Raw_Data_Path_Run 10 10 mean_mc_func.nii.gz
+                        SIGNAL_CHANGE_MAPS mc_func.nii.gz 100 500 $Raw_Data_Path_Run 5 5 mean_mc_func.nii.gz
+
+                       
 
                     fi
                 
