@@ -30,7 +30,7 @@ source ./Signal_Change_Map.sh
 # File_with_Dataset_Names="/Volumes/pr_ohlendorf/fMRI/Project1_CBV_fMRI_NJ/RawData/DatasetNames.txt"
 File_with_Dataset_Names="/Users/njain/Desktop/data.txt"
 
-indices=(1 2) #enter the index number of the file name that you would like to analyse
+indices=(1) #enter the index number of the file name that you would like to analyse
 
 for datasets in "${indices[@]}"; do
     

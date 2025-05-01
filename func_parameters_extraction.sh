@@ -29,7 +29,7 @@ FUNC_PARAM_EXTARCT () {
     # TaskDuration=$(echo "$Baseline_TRs + ($StimOn_TRs + $StimOff_TRs) * $NoOfEpochs" | bc)
     
     # BlockLength=$(($StimOn_TRs + $StimOff_TRs))
-    # MiddleVolume=$(($NoOfRepetitions / 2))
+    MiddleVolume=$(($NoOfRepetitions / 2))
 
     
     export SequenceName NoOfRepetitions TotalScanTime VolTR_msec VolTR
