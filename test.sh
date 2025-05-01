@@ -1,57 +1,51 @@
-#!/bin/bash
+#!/bin/sh
 
-# Base directory where the folders start
+#Following script has been made by Naman Jain with following features included in the
+#different version upgrades
 
-# Find all directories at exactly three levels deep from the base directory
-find "$base_dir" -mindepth 3 -maxdepth 3 -type d | while read dir; do
+##Calling all the functions that will be used in the upcoming script
 
-echo $base_dir
+#31.07.2024 instead of adding run numbers the code picks all the run numbers automatically located in the folder
+#14.08.2024 adding slice timing correction to all the functional scans
+#14.08.2024 assigning tags to the folders if they are structural or functional
+#07.11.2024 all functions to be called are sourced in one file
 
-    # Change to directory
-    cd "$dir" || exit
-   
-   
-    # Assuming you want to echo the name of the current folder
-    name=$(basename "$PWD")
-    
-    pwd
-    echo $name
-    # Return to the base directory
-    cd - > /dev/null
+#!/bin/sh
 
-    # exit
-done
+#07.11.2024: All files with functions located here
 
-
-
+source ./data_conversion_function.sh #converting data from either Bruker or Dicom format to NIFTI format
+source ./folder_existence_function.sh #check if folder is present or not
+source ./motion_correction_function.sh #perform motion correction using AFNI
+source ./temporal_SNR_spikes_smoothing_function.sh #check presence of spikes, peforms smoothing using either AFNI or NIFTI, caclulates temporal SNR
+source ./time_series_function.sh
+source ./activation_maps.sh # to map areas of activation using AFNI, also generates signal change maps
+source ./outlier_count.sh #14.08.2024 new function to perfom slice timing correction and outlier estimate before and after slice timing correction
+source ./video_making.sh #19.08.2024 new function to make videos of the signal change maps
+source ./func_parameters_extraction.sh #07.11.2024 new function to extract parameters for fMRI analysis
+source ./bash_log_create.sh #28.01.2025 creating logs for everytime you run bash scripts
+source ./Signal_Change_Map.sh
 
 
-## Main Script Starts from here
-# File_with_Dataset_Names="/Volumes/pr_ohlendorf/fMRI/Project1_CBV_fMRI_NJ/RawData/DatasetNames.txt"
 
 
 Raw_Data_Path="/Volumes/pr_ohlendorf/fMRI/RawData"
 
-find "$Raw_Data_Path" -mindepth 3 -maxdepth 3 -type d | while read dir; do
-echo $base_dir
+# The folder to exclude from the search
+exclude_folder="Project_Vasoprobes_testing"
 
+# Adjusted find command to exclude the folder properly
+find "$Raw_Data_Path" \( -type d -path "$Raw_Data_Path/$exclude_folder" -prune \) -o \( -type d -mindepth 3 -maxdepth 3 -print \) | while read dir; do
     # Change to directory
     cd "$dir" || exit
-
+    pwd
     DatasetName=$(basename "$PWD")
-    echo "Dataset Currently Being Analysed is": $DatasetName
+    # echo "Dataset Currently Being Analysed is": $DatasetName
 
-    #Locate the source of Raw Data on the server, this needs to be changed by the user based on the paths defined in their system#
-    Raw_Data_Path="/Volumes/pr_ohlendorf/fMRI/Project1_SeroAVATar_NJ_KR/RawData/$DatasetName"
-    Analysed_Data_Path="/Volumes/pr_ohlendorf/fMRI/Project1_SeroAVATar_NJ_KR/AnalysedData/$DatasetName"
-
-    # Raw_Data_Path="/Users/njain/Desktop/RawData/$DatasetName"
-    # Analysed_Data_Path="/Users/njain/Desktop/AnalysedData/$DatasetName"
-
-    LOG_DIR="$Raw_Data_Path/Data_Analysis_log" # Define the log directory where you want to store the script.
+    LOG_DIR="$dir" # Define the log directory where you want to store the script.
     user=$(whoami)
     log_execution "$LOG_DIR" || exit 1
 
-    CHECK_FILE_EXISTENCE $Analysed_Data_Path
-   
-    cd $Raw_Data_Path
+
+    cd - > /dev/null
+done
