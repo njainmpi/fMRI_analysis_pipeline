@@ -2,7 +2,7 @@
 
 #07.11.2024: All files with functions located here
 
-source data_conversion_function.sh #converting data from either Bruker or Dicom format to NIFTI format
+source ./data_conversion_function.sh #converting data from either Bruker or Dicom format to NIFTI format
 source folder_existence_function.sh #check if folder is present or not
 source motion_correction_function.sh #perform motion correction using AFNI
 source temporal_SNR_spikes_smoothing_function.sh #check presence of spikes, peforms smoothing using either AFNI or NIFTI, caclulates temporal SNR
