@@ -11,9 +11,9 @@ EXTRACT_VOXELS() {
     local voxel_list_file="voxels_${side}.txt"
     rm -f grouped_z_*.txt  # clean up previous groupings
 
-    for dx in {0..1}; do
-        for dy in {0..1}; do
-            for dz in {0..1}; do
+    for dx in {-2..2}; do
+        for dy in {0..2}; do
+            for dz in {-1..1}; do
                 x=$((x_center + dx))
                 y=$((y_center + dy))
                 z=$((z_center + dz))
