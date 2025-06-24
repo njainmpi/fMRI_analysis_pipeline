@@ -11,6 +11,7 @@ SIGNAL_CHANGE_MAPS () {
         local pacap_injection=$6
         local mean_image=$7
 
+
         NoOfRepetitions=$(awk -F'=' '/##\$PVM_NRepetitions=/{print $2}' $file_for_parameter_calculation/method)
         TotalScanTime=$(awk -F'=' '/##\$PVM_ScanTime=/{print $2}' $file_for_parameter_calculation/method)
         slice_count=$(awk -F'=' '/##\$NSLICES=/{print $2}' $file_for_parameter_calculation/acqp)
@@ -24,6 +25,7 @@ SIGNAL_CHANGE_MAPS () {
 
         No_of_Vols_in_pre_PACAP_injection=$((baseline_duration * 60 / VolTR))
         No_of_Vols_during_pre_PACAP_injection=$((pacap_injection * 60 / VolTR))
+
 
         #Creating Mask Image to Limit Signal Change Maps to masking area
         fslmaths mean_mc_func.nii.gz -thrp 30 -bin mask_mean_mc_func.nii.gz
@@ -57,6 +59,8 @@ SIGNAL_CHANGE_MAPS () {
         echo $NoOfRepetitions
         echo $volumes_per_block
         echo $end_idx_pt
+ 
+
 
         # Step 2: Process blocks of 60 repetitions, starting from time point 601
         for start_idx in $(seq $No_of_Vols_in_pre_PACAP_injection $volumes_per_block $end_idx_pt); do

@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 
 #06th June 2024: $$Naman Jain$$ This function is to estimate temporal SNR. Second part of the code checks
