@@ -1,166 +1,149 @@
-#!/bin/bash
+# Helper: print usage/help
+_signal_change_map_usage() {
+cat <<'EOF'
+Usage:
+  Signal_Change_Map -i <input_4d.nii[.gz]> -s <baseline_start> -e <baseline_end> [-o <out_prefix>]
+  Signal_Change_Map <input_4d.nii[.gz]> <baseline_start> <baseline_end> [out_prefix]
 
+Description:
+  Compute a % signal-change 4D dataset relative to a baseline window and
+  produce a sliding-window mean 4D output across time.
 
-Signal_Change_Map (){
+Required arguments:
+  -i, --input         Path to input 4D NIfTI (.nii or .nii.gz)
+  -s, --start         Baseline start TR index (0-based, inclusive)
+  -e, --end           Baseline end TR index (inclusive)
 
-        # input_4d_data=sm_func.nii.gz
-        # file_for_parameter_calculation="/Users/njain/Desktop"
-        # baseline_duration_in_min=10
-        # duration=5
-        # injection_duration=10
+Optional:
+  -o, --out-prefix    Prefix for outputs (default: "SCM_cleaned")
+  -h, --help          Show this help and exit
 
-        input_4d_data=$1
-        local file_for_parameter_calculation=$2
-        local baseline_duration_in_min=$3
-        local duration=$4
-        local injection_duration=$5
+Outputs:
+  baseline_image_<s>_to_<e>.nii.gz
+      Mean baseline image from TR s..e
 
+  <prefix>.nii.gz
+      % signal-change normalized 4D dataset
 
-        ##----------------------------------------------------------------------
-        ##Defining Colours for Display Output
-        # Terminal colors
-        RED='\033[0;31m'
-        GREEN='\033[0;32m'
-        BLUE='\033[0;34m'
-        YELLOW='\033[1;33m'
-        GRAY='\033[1;37m'
-        BOLD='\033[1m'
-        NC='\033[0m'
-        ##----------------------------------------------------------------------
+  <prefix>_sliding_avg_win_<win>.nii.gz
+      4D stack of sliding-window means:
+        sub-brick 0 = mean(0..win-1), 1 = mean(1..win), ..., last = mean(last..nt-1)
 
-        total_reps=$(awk -F'=' '/##\$PVM_NRepetitions=/{print $2}' $file_for_parameter_calculation/method)
-        TotalScanTime=$(awk -F'=' '/##\$PVM_ScanTime=/{print $2}' $file_for_parameter_calculation/method)
-        slice_count=$(awk -F'=' '/##\$NSLICES=/{print $2}' $file_for_parameter_calculation/acqp)
-        Sequence="$(grep -A1 'ACQ_protocol_name=( 64 )' "$file_for_parameter_calculation/acqp" \
-                | grep -v -e 'ACQ_protocol_name=( 64 )' -e '--' \
-                | sed -e 's/[<>]//g' -e 's/_.*$//')"
-        TotalScanTime_in_min=$(echo "scale=2; $TotalScanTime/60000" | bc)
-       # Convert to integer (drop decimal part)
-        TotalScanTime_in_min_integer=$(echo "$TotalScanTime_in_min / 1" | bc)
+Examples:
+  # With flags
+  Signal_Change_Map -i SCM_input.nii.gz -s 0 -e 100 -o SCM_trialA
 
-        #here the awk will look at the number of slices acquired using the information located in the methods file   
-           
-        # 07.08.2024 Estimating Volume TR
-        VolTR_msec=$(echo "scale=0; $TotalScanTime/$total_reps" | bc)
-        VolTR=$(echo "scale=0; $VolTR_msec/1000" | bc)
+  # Positional (same as above)
+  Signal_Change_Map SCM_input.nii.gz 0 100 SCM_trialA
+EOF
+}
 
-        echo ""
-        echo ""
-        No_of_Vols_in_pre_PACAP_injection=$((baseline_duration_in_min * 60 / VolTR))
-        echo -e "${RED}No of Volumes${NC} in data are ${GREEN}$total_reps${NC} with ${RED}Volume TR${NC} of ${GREEN}$VolTR sec${NC} with ${RED}No of Volumes in Pre_injection${NC} to be ${GREEN}$No_of_Vols_in_pre_PACAP_injection${NC}."
-        Seconds_to_be_discarded=300
-        No_of_Vols_in_pre_PACAP_injection_to_be_discarded=$((Seconds_to_be_discarded / VolTR))
-        echo -e "${RED}No of Volumes to be discard is $No_of_Vols_in_pre_PACAP_injection_to_be_discarded for $Seconds_to_be_discarded Seconds.${NC}"
+# Helper: check a required command exists
+_need() { command -v "$1" >/dev/null 2>&1 || { echo "ERROR: '$1' not found in PATH." >&2; return 127; }; }
 
+Signal_Change_Map () {
+  # Show help if asked explicitly
+  if [[ "$1" == "-h" || "$1" == "--help" ]]; then
+    _signal_change_map_usage; return 0
+  fi
 
-        base_start=$(( 0 + No_of_Vols_in_pre_PACAP_injection_to_be_discarded ))
-        base_end=$(( No_of_Vols_in_pre_PACAP_injection ))
+  # ---------------------------
+  # Parse CLI (flags or positionals)
+  # ---------------------------
+  local input="" base_start="" base_end="" out_prefix="SCM_cleaned"
 
-        echo ""
-        echo -e "${BLUE}For current data, baseline calculation starts at Volume No${NC} ${GREEN}$base_start${NC} ${BLUE}and finishes at${NC} ${GREEN}$base_end${NC}."
+  if [[ "$1" == -* ]]; then
+    # Flag style
+    while [[ $# -gt 0 ]]; do
+      case "$1" in
+        -i|--input)       input="$2"; shift 2 ;;
+        -s|--start)       base_start="$2"; shift 2 ;;
+        -e|--end)         base_end="$2"; shift 2 ;;
+        -o|--out-prefix)  out_prefix="$2"; shift 2 ;;
+        -h|--help)        _signal_change_map_usage; return 0 ;;
+        --)               shift; break ;;
+        -*)               echo "ERROR: Unknown option: $1" >&2; _signal_change_map_usage; return 2 ;;
+        *)                break ;;
+      esac
+    done
+  else
+    # Positional fallback: input start end [out_prefix]
+    input="${1:-}"; base_start="${2:-}"; base_end="${3:-}"; [[ -n "${4:-}" ]] && out_prefix="$4"
+  fi
 
+  # If any required arg missing → help
+  if [[ -z "$input" || -z "$base_start" || -z "$base_end" ]]; then
+    echo "ERROR: Missing required arguments." >&2
+    _signal_change_map_usage; return 2
+  fi
 
-        draw_case "Sequence used $Sequence" $TotalScanTime_in_min_integer 1 $baseline_duration_in_min $injection_duration $VolTR $seq
-        rm -f baseline_image.nii.gz
+  # ---------------------------
+  # Validate inputs & env
+  # ---------------------------
+  if [[ ! -f "$input" ]]; then
+    echo "ERROR: Input file '$input' not found." >&2; return 1
+  fi
+  if [[ "$input" != *.nii && "$input" != *.nii.gz ]]; then
+    echo "ERROR: Input must be a NIfTI file (.nii or .nii.gz)." >&2; return 1
+  fi
+  if ! [[ "$base_start" =~ ^[0-9]+$ && "$base_end" =~ ^[0-9]+$ ]]; then
+    echo "ERROR: Baseline start/end must be integers." >&2; return 1
+  fi
+  if (( base_end <= base_start )); then
+    echo "ERROR: baseline_end must be greater than baseline_start." >&2; return 1
+  fi
 
-        # Step 1: Compute the baseline image (mean of the first 600 repetitions)
-        rm -f baseline_image.nii.gz
-        3dTstat -mean -prefix baseline_image.nii.gz ${input_4d_data}"[${base_start}..${base_end}]"
+  # External tool checks (AFNI/FSL)
+  _need 3dTstat || return $?
+  _need 3dinfo  || return $?
+  _need 3dTcat  || return $?
+  _need fslmaths || return $?
 
-        # Initialize an empty list to store the intermediate processed images
-        processed_images=()
-        # duration_seconds=$((duration * 60))
-        duration_seconds=${duration}
-        volumes_per_block=$(echo "$duration_seconds / $VolTR" | bc)
-        total_reps_idx=$((total_reps))
+  # ---------------------------
+  # Processing
+  # ---------------------------
+  local win=$(( base_end - base_start ))
+  local step=1
+  local base_label="${base_start}_to_${base_end}"
+  local out_sliding="${out_prefix}_sliding_avg_win_${win}.nii.gz"
+  local out_psc="${out_prefix}.nii.gz"
 
+  echo ">>> Computing baseline image (TR $base_start..$base_end)..."
+  3dTstat -mean -prefix "baseline_image_${base_label}.nii.gz" "${input}[${base_start}..${base_end}]"
 
-        # === VALIDATE ===
-        if [[ -z "$VolTR" || -z "$total_reps_idx" || -z "$duration" ]]; then
-                echo "Usage: $0 <TR_in_seconds> <total_reps_idx> <Block_Duration_in_minutes>"
-                exit 1
-        fi
+  echo ">>> Normalizing to % signal change..."
+  fslmaths "$input" \
+    -sub "baseline_image_${base_label}.nii.gz" \
+    -div "baseline_image_${base_label}.nii.gz" \
+    -mul 100 "$out_psc"
 
-        bar_unit="█"  # Can be changed to ▓, ▒, etc.
+  echo ">>> Baseline-normalized file ready: $out_psc"
 
+  local nt
+  nt=$(3dinfo -nt "$out_psc")
+  local last=$(( nt - win ))
+  if (( last < 0 )); then
+    echo "ERROR: nt($nt) < win($win). Choose a shorter baseline window or check data." >&2
+    return 1
+  fi
 
+  local tmpdir
+  tmpdir=$(mktemp -d)
+  echo ">>> NT=$nt, WIN=$win -> outputs = $(( last + 1 )) (i=0..$last)"
 
-        # === HEADER ===
-        
-        echo -e "${GREEN}\nTR = $VolTR sec${NC} | ${BLUE}Block size = $duration min${NC} | ${YELLOW}Volumes/block = $volumes_per_block${NC}"
-        echo -e "${RED}Total volumes = $total_reps_idx\n${NC}"
-        echo "Bar units represent actual minutes of scan time"
-        echo -e "\nBlock Visualization:\n"
+  for (( i=0; i<=last; i+=step )); do
+    j=$(( i + win - 1 ))
+    3dTstat -mean -prefix "${tmpdir}/m_${i}-${j}.nii.gz" "${out_psc}[${i}..${j}]"
+  done
 
-        # === LOOP ===
-        block_num=0
-        for ((start_idx=0; start_idx<total_reps_idx; start_idx+=volumes_per_block)); do
-                end_idx=$((start_idx + volumes_per_block - 1))
-                        (( end_idx >= total_reps_idx )) && end_idx=$((total_reps_idx - 1))
+  echo ">>> Concatenating sliding-window means..."
+  3dTcat -prefix "$out_sliding" "${tmpdir}"/m_*.nii.gz
+  rm -rf "$tmpdir"
 
-
-                # Create a meaningful label for this block of repetitions
-                label="${start_idx}_to_${end_idx}"
-                block_size=$((end_idx - start_idx + 1))
-                block_num=$((block_num + 1))
-
-                # Time duration in minutes
-                duration_min=$(echo "scale=2; $block_size * $VolTR / 60" | bc)
-                rounded_min=$(printf "%.0f" "$duration_min")
-
-                # Draw one BAR_UNIT per minute
-                bar=$(printf "%-${rounded_min}s" "" | tr " " "$bar_unit")
-
-                # Choose color
-                if (( rounded_min < duration )); then
-                        color="$YELLOW"
-                else
-                        color="$GREEN"
-                fi
-
-                # Output
-                printf "Processing ${RED}Block Number %2d${NC}: ${color}%s${NC} [Vols %3d - %3d | ~%4.2f min]\n" \
-                "$block_num" "$bar" "$start_idx" "$end_idx" "$duration_min"
-                echo ""
-                echo ""
-                # Step 2a: Compute the mean for the current block of 60 repetitions
-                3dTstat -mean -prefix block_mean_${label}.nii.gz ${input_4d_data}"[${start_idx}..${end_idx}]"
-                
-                #Step 2b: Subtract the baseline and divide by the baseline
-                3dcalc -a block_mean_${label}.nii.gz -b baseline_image.nii.gz -expr '(a-b)/b' -prefix ratio_processed_${label}.nii.gz
-
-                #Step 2c: Converting into percent by multiplying it by 100
-                3dcalc -a ratio_processed_${label}.nii.gz -expr 'a*100' -prefix processed_${label}.nii.gz
-                    
-                #Add the processed image to the list
-                processed_images+=("processed_${label}.nii.gz")
-                
-                echo ""
-                echo ""
-        done
-
-        # === LEGEND ===
-        echo -e "\n${GREEN}${bar_unit}${NC} = 1 minute of scan (full block)"
-        echo -e "${YELLOW}${bar_unit}${NC} = partial block duration"
-
-        timestamp=$(date +"%Y-%m-%d_%H-%M")
-     
-
-
-        #Step 3: Combine all the processed blocks into a single 4D image
-        3dTcat -prefix Signal_Change_Map_premask_${duration}min_${timestamp}.nii.gz "${processed_images[@]}"
-
-        fslmaths Signal_Change_Map_premask_${duration}min_${timestamp}.nii.gz -mas mask_mean_mc_func.nii.gz Signal_Change_Map_${duration}min_${timestamp}.nii.gz
-
-        rm -f Updated_Signal_Change_Map.nii.gz
-        cp Signal_Change_Map_${duration}min_${timestamp}.nii.gz Updated_Signal_Change_Map.nii.gz
-        echo "All blocks processed and combined into final 4D image: Signal_Change_Map_${duration}min_${timestamp}.nii.gz"
-
-        mkdir img_blocks img_pr img_rat_pr
-
-        mv *block* img_blocks/
-        mv processed* img_pr/
-        mv ratio_processed* img_rat_pr/
-        # rm -f *block* processed* ratio_processed*
-
+  echo ">>> Done."
+  echo ">>> Outputs:"
+  echo "    - baseline_image_${base_label}.nii.gz"
+  echo "    - $out_psc"
+  echo "    - $out_sliding"
+  echo ">>> Check: sub-brick 0 = mean(0..$((win-1))), 1 = mean(1..$win), ..., $last = mean($last..$((nt-1)))"
 }
