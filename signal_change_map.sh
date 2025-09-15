@@ -108,7 +108,6 @@ Signal_Change_Map () {
         local out_sliding="${out_prefix}_sliding_avg_win_${win}.nii.gz"
         local out_psc="${out_prefix}.nii.gz"
 
-        export $out_sliding
         echo ">>> Normalizing to % signal change..."
 
         #Making mask to create even cleaner SCM
