@@ -14,7 +14,7 @@ move_results() {
 
   # --- destination folder name: DD_MM_YY_username ---
   local stamp
-  stamp=$(date +%d_%m_%y)
+  stamp=$(date +%y_%m_%d)
   local user=${USER:-$(whoami)}
   local dest="${stamp}_${user}"
   mkdir -p -- "$dest"
