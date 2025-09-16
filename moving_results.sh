@@ -14,7 +14,7 @@ move_results() {
 
   # --- destination folder name: DD_MM_YY_username ---
   local stamp
-  stamp=$(date +%y_%m_%d)
+  stamp=$(date +%y_%m_%d_%H%M%S)
   local user=${USER:-$(whoami)}
   local dest="${stamp}_${user}"
   mkdir -p -- "$dest"
@@ -32,7 +32,7 @@ move_results() {
   for f in *; do
     [[ -e "$f" ]] || continue           # only existing files/dirs
     [[ "$f" == "$dest" ]] && continue   # skip today’s new folder
-    [[ -d "$f" && "$f" =~ ^[0-9]{2}_[0-9]{2}_[0-9]{2}_.+$ ]] && continue  # skip old results folders
+    [[ -d "$f" && "$f" =~ ^[0-9]{2}_[0-9]{2}_[0-9]{2}_[0-9]{6}_.+$ ]] && continue  # skip old results folders
 
     if [[ -f "$f" ]]; then
       if ! should_skip "$f"; then
