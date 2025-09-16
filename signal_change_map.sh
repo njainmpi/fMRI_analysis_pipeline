@@ -106,14 +106,14 @@ Signal_Change_Map () {
         local step=1
         local base_label="${base_start}_to_${base_end}"
         local out_sliding="${out_prefix}_sliding_avg_win_${win}.nii.gz"
-        local out_psc="${out_prefix}.nii.gz"
+        local out_psc="${out_prefix}_${base_label}.nii.gz"
 
         echo ">>> Normalizing to % signal change..."
 
         #Making mask to create even cleaner SCM
         fslmaths ${input} -thrp 45 -bin autoclean_mask_${input}
         fslmaths ${input} -mas autoclean_mask_${input} autocleaned_${input}
-        fslmaths autocleaned_${input} -sub "baseline_image_${base_label}.nii.gz" -div "baseline_image_${base_label}.nii.gz" -mul 100 "$out_psc_${base_label}"
+        fslmaths autocleaned_${input} -sub "baseline_image_${base_label}.nii.gz" -div "baseline_image_${base_label}.nii.gz" -mul 100 "$out_psc"
 
         echo ">>> Baseline-normalized file ready: $out_psc"
 
