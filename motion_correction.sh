@@ -12,4 +12,6 @@ MOTION_CORRECTION () {
     # 1Dplot -volreg -sep motion.1D
     1dplot -xlabel Time -ylabel "Translation (mm)" -title "3dvolreg translations" -dx 1 -jpgs 640x144 rest_translation 'motion.1D[3..5]'
     1dplot -xlabel Time -ylabel "Rotations (degree)" -title "3dvolreg rotations" -dx 1 -jpgs 640x144 rest_rotation 'motion.1D[0..2]'
+
+    rm -f ${3}'+orig.BRIK' ${3}'+orig.HEAD'
 }
