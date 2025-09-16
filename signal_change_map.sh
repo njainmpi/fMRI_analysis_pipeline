@@ -113,7 +113,7 @@ Signal_Change_Map () {
         #Making mask to create even cleaner SCM
         fslmaths ${input} -thrp 45 -bin autoclean_mask_${input}
         fslmaths ${input} -mas autoclean_mask_${input} autocleaned_${input}
-        fslmaths autocleaned_${input} -sub "baseline_image_${base_label}.nii.gz" -div "baseline_image_${base_label}.nii.gz" -mul 100 "$out_psc"
+        fslmaths autocleaned_${input} -sub "baseline_image_${base_label}.nii.gz" -div "baseline_image_${base_label}.nii.gz" -mul 100 "$out_psc_${base_label}"
 
         echo ">>> Baseline-normalized file ready: $out_psc"
 
