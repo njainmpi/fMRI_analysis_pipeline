@@ -111,37 +111,39 @@ Signal_Change_Map () {
         echo ">>> Normalizing to % signal change..."
 
         #Making mask to create even cleaner SCM
-        fslmaths ${input} -thrp 45 -bin autoclean_mask_${input}
-        fslmaths ${input} -mas autoclean_mask_${input} autocleaned_${input}
-        fslmaths autocleaned_${input} -sub "baseline_image_${base_label}.nii.gz" -div "baseline_image_${base_label}.nii.gz" -mul 100 "$out_psc"
+        # fslmaths ${input} -thrp 45 -bin autoclean_mask_${input}
+        # fslmaths ${input} -mas autoclean_mask_${input} autocleaned_${input}
+        # fslmaths autocleaned_${input} -sub "baseline_image_${base_label}.nii.gz" -div "baseline_image_${base_label}.nii.gz" -mul 100 "$out_psc"
+
+        fslmaths ${input} -sub "baseline_image_${base_label}.nii.gz" -div "baseline_image_${base_label}.nii.gz" -mul 100 "$out_psc"
 
         echo ">>> Baseline-normalized file ready: $out_psc"
 
-        local nt
-        nt=$(3dinfo -nt "$out_psc")
-        local last=$(( nt - win ))
-        if (( last < 0 )); then
-        echo "ERROR: nt($nt) < win($win). Choose a shorter baseline window or check data." >&2
-        return 1
-        fi
+        # local nt
+        # nt=$(3dinfo -nt "$out_psc")
+        # local last=$(( nt - win ))
+        # if (( last < 0 )); then
+        # echo "ERROR: nt($nt) < win($win). Choose a shorter baseline window or check data." >&2
+        # return 1
+        # fi
 
-        local tmpdir
-        tmpdir=$(mktemp -d)
-        echo ">>> NT=$nt, WIN=$win -> outputs = $(( last + 1 )) (i=0..$last)"
+        # local tmpdir
+        # tmpdir=$(mktemp -d)
+        # echo ">>> NT=$nt, WIN=$win -> outputs = $(( last + 1 )) (i=0..$last)"
 
-        for (( i=0; i<=last; i+=step )); do
-        j=$(( i + win - 1 ))
-        3dTstat -mean -prefix "${tmpdir}/m_${i}-${j}.nii.gz" "${out_psc}[${i}..${j}]"
-        done
+        # for (( i=0; i<=last; i+=step )); do
+        # j=$(( i + win - 1 ))
+        # 3dTstat -mean -prefix "${tmpdir}/m_${i}-${j}.nii.gz" "${out_psc}[${i}..${j}]"
+        # done
 
-        echo ">>> Concatenating sliding-window means..."
-        3dTcat -prefix "$out_sliding" "${tmpdir}"/m_*.nii.gz
-        rm -rf "$tmpdir"
+        # echo ">>> Concatenating sliding-window means..."
+        # 3dTcat -prefix "$out_sliding" "${tmpdir}"/m_*.nii.gz
+        # rm -rf "$tmpdir"
 
         echo ">>> Done."
         echo ">>> Outputs:"
         echo "    - baseline_image_${base_label}.nii.gz"
         echo "    - $out_psc"
-        echo "    - $out_sliding"
-        echo ">>> Check: sub-brick 0 = mean(0..$((win-1))), 1 = mean(1..$win), ..., $last = mean($last..$((nt-1)))"
+        # echo "    - $out_sliding"
+        # echo ">>> Check: sub-brick 0 = mean(0..$((win-1))), 1 = mean(1..$win), ..., $last = mean($last..$((nt-1)))"
 }
