@@ -19,7 +19,7 @@ scm_coregsitered_functional () {
       fslmaths ${1} -Tmean mean_mc_func_cannulas
 
       echo "When fsleyes opens, create a mask to include cannulas in the functional data and save it as mask_mean_mc_func_cannulas.nii.gz"
-      fsleyes mean_mc_func_cannulas.nii.gz
+      fsleyes mean_mc_func_cannulas.nii.gz mas_mean_mc_func.nii.gz
 
       # Create masks to include cannulas from functional data
       fslmaths mc_func.nii.gz -mas mask_mean_mc_func_cannulas.nii.gz cleaned_with_cannula_mc_func.nii.gz
@@ -28,7 +28,7 @@ scm_coregsitered_functional () {
       3dAllineate -base ${2} -input mean_mc_func_cannulas.nii.gz -1Dmatrix_save mean_func_struct_aligned.aff12.1D -cost lpa -prefix mean_func_struct_aligned.nii.gz -1Dparam_save params.1D -twopass
 
       # Use the transformation matrix generated from above step to register entire functional time series to strucutral data
-      3dAllineate -input cleaned_with_cannula_mc_func.nii.gz -1Dmatrix_apply mean_func_struct_aligned.aff12.1D -master cleaned_anatomy.nii.gz -final linear -prefix fMRI_coregistered_to_struct.nii.gz
+      3dAllineate -input cleaned_with_cannula_mc_func.nii.gz -1Dmatrix_apply mean_func_struct_aligned.aff12.1D -master ${2} -final linear -prefix fMRI_coregistered_to_struct.nii.gz
 
       # Create a mean image from the coregistered functional image
       fslmaths fMRI_coregistered_to_struct.nii.gz -Tmean mean_fMRI_coregistered_to_struct.nii.gz 
