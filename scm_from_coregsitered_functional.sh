@@ -19,7 +19,7 @@ scm_coregsitered_functional () {
       fslmaths ${1} -Tmean mean_mc_func_cannulas
 
       echo "When fsleyes opens, create a mask to include cannulas in the functional data and save it as mask_mean_mc_func_cannulas.nii.gz"
-      fsleyes mean_mc_func_cannulas.nii.gz mas_mean_mc_func.nii.gz
+      fsleyes mean_mc_func_cannulas.nii.gz mask_mean_mc_func.nii.gz
 
       # Create masks to include cannulas from functional data
       fslmaths mc_func.nii.gz -mas mask_mean_mc_func_cannulas.nii.gz cleaned_with_cannula_mc_func.nii.gz
