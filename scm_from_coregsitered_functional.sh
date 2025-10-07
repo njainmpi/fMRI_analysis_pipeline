@@ -36,19 +36,24 @@ scm_coregsitered_functional () {
       # Create a mask on the mean image to estimate signal change map
       fsleyes mean_fMRI_coregistered_to_struct.nii.gz
 
+
+      # Apply spatial smoothing - 2 voxel
+      fslmaths fMRI_coregistered_to_struct -s 0.12 sm_fMRI_coregistered_to_struct.nii.gz
+
+
       # Clean the coregsitered functional data to generate SCM
-      fslmaths fMRI_coregistered_to_struct.nii.gz -mas mask_mean_fMRI_coregistered_to_struct.nii.gz fMRI_for_scm
+      fslmaths sm_fMRI_coregistered_to_struct.nii.gz -mas mask_mean_fMRI_coregistered_to_struct.nii.gz sm_fMRI_for_scm
 
       # Generate SCM
-      3dTstat -mean -prefix "coreg_signal_image_${sig_start}_to_${sig_end}.nii.gz" "fMRI_for_scm.nii.gz[${sig_start}..${sig_end}]"
-      3dTstat -mean -prefix "coreg_baseline_image_${base_start}_to_${base_end}.nii.gz" "fMRI_for_scm.nii.gz[${base_start}..${base_end}]"
+      3dTstat -mean -prefix "coreg_signal_image_${sig_start}_to_${sig_end}.nii.gz" "sm_fMRI_for_scm.nii.gz[${sig_start}..${sig_end}]"
+      3dTstat -mean -prefix "coreg_baseline_image_${base_start}_to_${base_end}.nii.gz" "sm_fMRI_for_scm.nii.gz[${base_start}..${base_end}]"
 
       fslmaths "coreg_signal_image_${sig_start}_to_${sig_end}.nii.gz" \
             -sub "coreg_baseline_image_${base_start}_to_${base_end}.nii.gz" \
             -div "coreg_baseline_image_${base_start}_to_${base_end}.nii.gz" \
-            -mul 100 "coreg_func_Static_Map_${base_start}_to_${base_end}_and_${sig_start}_to_${sig_end}.nii.gz"
+            -mul 100 "sm_coreg_func_Static_Map_${base_start}_to_${base_end}_and_${sig_start}_to_${sig_end}.nii.gz"
 
-      echo "Done ✅  Output map: coreg_func_Static_Map_${base_start}_to_${base_end}_and_${sig_start}_to_${sig_end}.nii.gz"
+      echo "Done ✅  Output map: sm_coreg_func_Static_Map_${base_start}_to_${base_end}_and_${sig_start}_to_${sig_end}.nii.gz"
 }
 
 
