@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # this is a function to coregister functional data to structural data and generate signal change map (SCM)
-scm_foregsitered_functional () {
+scm_coregsitered_functional () {
 
 
   if [[ $# -ne 6 ]]; then
