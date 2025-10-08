@@ -34,6 +34,7 @@ scm_coregsitered_functional () {
       fslmaths fMRI_coregistered_to_struct.nii.gz -Tmean mean_fMRI_coregistered_to_struct.nii.gz 
 
       # Create a mask on the mean image to estimate signal change map
+      echo "Please save the mask as mask_mean_fMRI_coregistered_to_struct.nii.gz"
       fsleyes mean_fMRI_coregistered_to_struct.nii.gz
 
 
