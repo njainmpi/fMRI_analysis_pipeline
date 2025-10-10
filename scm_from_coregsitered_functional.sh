@@ -20,10 +20,12 @@ scm_coregsitered_functional () {
 
       echo "When fsleyes opens, create a mask to include cannulas in the functional data and save it as mask_mean_mc_func_cannulas.nii.gz"
       fsleyes mean_mc_func_cannulas.nii.gz mask_mean_mc_func.nii.gz
+      rm -f mean_mc_func_cannulas.nii.gz
 
       # Create masks to include cannulas from functional data
       fslmaths mc_func.nii.gz -mas mask_mean_mc_func_cannulas.nii.gz cleaned_with_cannula_mc_func.nii.gz
-
+      fslmaths cleaned_with_cannula_mc_func.nii.gz -Tmean mean_mc_func_cannulas.nii.gz
+      
       # Coregsiter cleaned mean functional image to the cleaned structural image
       3dAllineate -base ${2} -input mean_mc_func_cannulas.nii.gz -1Dmatrix_save mean_func_struct_aligned.aff12.1D -cost lpa -prefix mean_func_struct_aligned.nii.gz -1Dparam_save params.1D -twopass
 
