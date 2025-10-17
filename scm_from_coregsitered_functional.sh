@@ -46,8 +46,6 @@ scm_coregsitered_functional () {
       
       fi
       
-
-
       # Apply spatial smoothing - 2 voxel
       fslmaths fMRI_coregistered_to_struct -s 0.12 sm_fMRI_coregistered_to_struct.nii.gz
 
