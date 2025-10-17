@@ -37,8 +37,15 @@ scm_coregsitered_functional () {
       fslmaths fMRI_coregistered_to_struct.nii.gz -Tmean mean_fMRI_coregistered_to_struct.nii.gz 
 
       # Create a mask on the mean image to estimate signal change map
-      echo "Please save the mask as mask_mean_fMRI_coregistered_to_struct.nii.gz"
-      fsleyes mean_fMRI_coregistered_to_struct.nii.gz
+      
+      if [[ -f mask_mean_fMRI_coregistered_to_struct.nii.gz ]]; then
+        echo "Mask file mask_mean_fMRI_coregistered_to_struct.nii.gz already exists. Using the existing mask."
+      else
+        echo "Please save the mask as mask_mean_fMRI_coregistered_to_struct.nii.gz"
+        fsleyes mean_fMRI_coregistered_to_struct.nii.gz
+      
+      fi
+      
 
 
       # Apply spatial smoothing - 2 voxel
