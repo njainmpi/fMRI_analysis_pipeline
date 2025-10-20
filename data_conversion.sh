@@ -50,6 +50,11 @@ echo "Using brkraw to convert Bruker format to NIFTI"
         cp *$2* G1_cp.nii.gz
     fi
 
+    echo ""
+    echo "Fixing orientation to LPI"
+    echo ""
+    3dresample -orient LPI -inset G1_cp.nii.gz -prefix G1_cp.nii.gz -overwrite
+
     fslhd G1_cp.nii.gz > NIFTI_file_header_info.txt
 }
 
