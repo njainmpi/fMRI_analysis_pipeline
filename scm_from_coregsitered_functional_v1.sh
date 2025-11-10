@@ -67,6 +67,16 @@ scm_coregsitered_functional () {
             -sub "coreg_baseline_image_${base_start}_to_${base_end}.nii.gz" \
             -div "coreg_baseline_image_${base_start}_to_${base_end}.nii.gz" \
             -mul 100 "sm_coreg_func_Static_Map_${base_start}_to_${base_end}_and_${sig_start}_to_${sig_end}.nii.gz"
+      
+
+      # Normalize the cleaned coregsitered functional data
+
+      fslmaths fMRI_coregistered_to_struct.nii.gz \
+        -sub coreg_baseline_image_${base_start}_to_${base_end}.nii.gz \
+        -div coreg_baseline_image_${base_start}_to_${base_end}.nii.gz \
+        -mul 100 \
+        norm_fMRI_coregistered_to_struct.nii.gz
+    
 
       echo "Done ✅  Output map: sm_coreg_func_Static_Map_${base_start}_to_${base_end}_and_${sig_start}_to_${sig_end}.nii.gz"
 }
