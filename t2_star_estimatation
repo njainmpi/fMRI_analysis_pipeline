@@ -1,0 +1,380 @@
+import argparse
+import subprocess
+import re
+import numpy as np
+from scipy.optimize import curve_fit
+from pathlib import Path
+import shutil
+import os 
+from nipype.interfaces.fsl import ImageMeants
+
+
+# ---- CLI args: MGE path + run numbers ----
+parser = argparse.ArgumentParser(description="Estimate T2* from MGE data.")
+parser.add_argument("mge_path", help="Path to your MGE data directory/file")
+parser.add_argument("runs", nargs="+", type=int, help="Run numbers to analyse (space-separated)")
+args = parser.parse_args()
+
+
+
+## --------------------- Defining all the functions and variables --------------------- ##
+
+def motion_correction(input_file, output_prefix):
+    """
+    Performs AFNI 3dvolreg motion correction and returns
+    the corrected NIfTI file in the SAME directory as output_prefix.
+    """
+
+    input_file = str(input_file)
+    output_prefix = str(output_prefix)
+
+    # ---- Ensure output directory exists ----
+    output_dir = os.path.dirname(output_prefix)
+    os.makedirs(output_dir, exist_ok=True)
+
+    prefix_name = os.path.basename(output_prefix)   # Only filename, no path
+
+    print(f"\n[INFO] Running motion correction:")
+    print(f"      Input:  {input_file}")
+    print(f"      Output: {output_prefix}")
+    print(f"      CWD:    {output_dir}")
+
+    # ------------------------------------------------------------------
+    # 1. RUN 3dvolreg (MOTION CORRECTION)
+    # ------------------------------------------------------------------
+    motion_correction_cmd = ["3dvolreg", "-prefix", prefix_name, "-verbose", "-1Dfile", "motion.1D", "-1Dmatrix_save", "mats", "-linear", "-twopass", "-float", "-maxdisp1D", "rmsabs.1D", input_file]
+
+    subprocess.run(motion_correction_cmd, check=True, cwd=output_dir)
+    print("[OK] 3dvolreg completed")
+
+    # AFNI produces:
+    #   prefix_name+orig.HEAD / .BRIK
+
+    afni_brik = Path(output_dir) / f"{prefix_name}+orig.BRIK"
+    afni_head = Path(output_dir) / f"{prefix_name}+orig.HEAD"
+
+    # ------------------------------------------------------------------
+    # 2. Convert AFNI → NIfTI
+    # ------------------------------------------------------------------
+    # print("[INFO] Converting AFNI → NIfTI")
+    # subprocess.run(["3dAFNItoNIFTI", afni_brik.name], check=True, cwd=output_dir)
+
+    # # Output of 3dAFNItoNIFTI:
+    # #   prefix_name.nii
+    # nifti_file = Path(output_dir) / f"{prefix_name}.nii"
+
+    # if nifti_file.exists():
+    #     subprocess.run(["gzip", "-1", nifti_file.name], check=True, cwd=output_dir)
+    #     print(f"[OK] Gzipped: {nifti_file}.gz")
+    # else:
+    #     print("[WARN] NIfTI file missing, cannot gzip")
+
+    # ------------------------------------------------------------------
+    # 3. Generate motion plots
+    # ------------------------------------------------------------------
+    print("[INFO] Generating motion plots")
+
+    # Translations
+    plot_trans_cmd = ["1dplot", "-xlabel", "Time", "-ylabel", "Translation (mm)", "-title", "3dvolreg translations", "-dx", "1", "-jpgs", "640x144", "rest_translation", "motion.1D[3..5]"]
+    subprocess.run(plot_trans_cmd, check=True, cwd=output_dir)
+
+    # Rotations
+    plot_rot_cmd = ["1dplot", "-xlabel", "Time", "-ylabel", "Rotations (degree)", "-title", "3dvolreg rotations", "-dx", "1", "-jpgs", "640x144", "rest_rotation", "motion.1D[0..2]"]
+    subprocess.run(plot_rot_cmd, check=True, cwd=output_dir)
+
+    # ------------------------------------------------------------------
+    # 4. Clean up AFNI intermediate files (optional)
+    # ------------------------------------------------------------------
+    try:
+        afni_brik.unlink()
+        afni_head.unlink()
+        print("[OK] Cleaned intermediate AFNI files")
+    except:
+        print("[WARN] AFNI intermediates could not be removed")
+
+    print("\n[COMPLETE] Motion correction finished!\n")
+
+    # Return path to final corrected NIfTI
+    return Path(output_dir) / f"{prefix_name}.nii.gz"
+
+def extract_block_value(file_path: Path, key: str) -> str:
+    try:
+        lines = file_path.read_text(errors="ignore").splitlines()
+    except Exception as e:
+        print(f"[WARN] Could not read {file_path}: {e}")
+        return ""
+    for i, line in enumerate(lines):
+        if line.strip().startswith(key):
+            if i + 1 < len(lines):
+                return lines[i + 1].strip("<> ")
+    return ""
+
+def extract_echo_times(file_path: Path) -> list[float]:
+    try:
+        lines = file_path.read_text(errors="ignore").splitlines()
+    except Exception as e:
+        print(f"[WARN] Could not read {file_path}: {e}")
+        return []
+    for i, line in enumerate(lines):
+        if line.strip().startswith("##$ACQ_echo_time="):
+            if i + 1 < len(lines):
+                vals = lines[i + 1].split()
+                echo_vals = []
+                for v in vals:
+                    try:
+                        echo_vals.append(round(float(v), 2))
+                    except ValueError:
+                        continue
+                return echo_vals
+    return []
+
+
+# ---- Validate MGE path + runs ----
+mge_path = Path(args.mge_path).expanduser()
+if not mge_path.exists():
+    raise SystemExit(f"MGE path not found: {mge_path}")
+print(f"Using MGE data path: {mge_path}")
+print(f"Runs to analyse: {args.runs}")
+
+for r in args.runs:
+    run_path = mge_path / str(r)
+    print(f"Run {r} path: {run_path}")
+
+    acqp_file = run_path / "acqp"
+    method_file = run_path / "method"
+
+    if not acqp_file.exists():
+        print(f"  [WARN] acqp not found: {acqp_file}")
+    if not method_file.exists():
+        print(f"  [WARN] method not found: {method_file}")
+
+
+
+# ---- Extract subject ID ----
+subject_file = mge_path / "subject"
+subject_id = extract_block_value(subject_file, "##$SUBJECT_id=") if subject_file.exists() else ""
+
+if subject_id:
+    print(f"Subject ID: {subject_id}")
+else:
+    print(f"[WARN] SUBJECT_id not found in {subject_file}")
+
+def safe_name(raw: str) -> str:
+    if not raw:
+        return "unknown"
+    cleaned = re.sub(r'[^A-Za-z0-9._-]+', "_", raw.strip())
+    return cleaned.strip("_") or "unknown"
+
+# Create subject folder on desktop
+dest_subject_dir = Path.cwd() / safe_name(subject_id)
+dest_subject_dir.mkdir(exist_ok=True, parents=True)
+
+
+# -------------- Process combined files for T2* estimation --------------
+
+combined_folder_name = "MGE_Combined"
+dest_combined_dir = dest_subject_dir / combined_folder_name
+dest_combined_dir.mkdir(exist_ok=True, parents=True)
+
+
+# ---- PROCESS EACH RUN ----
+# ---- PROCESS EACH RUN ----
+for r in args.runs:
+    run_path = mge_path / str(r)
+    acqp_file = run_path / "acqp"
+
+    if not acqp_file.exists():
+        print(f"[WARN] Skipping run {r}: missing {acqp_file}")
+        continue
+
+    seq_name = extract_block_value(acqp_file, "##$ACQ_protocol_name=")
+    echo_times = extract_echo_times(acqp_file)
+
+    print(f"Run {r} -> Sequence: {seq_name or '[missing]'} | Echo times (ms): {echo_times or '[missing]'}")
+
+    run_folder_name = f"{r}_{safe_name(seq_name)}" if seq_name else f"{r}_unknown"
+    dest_run_dir = dest_subject_dir / run_folder_name
+    dest_run_dir.mkdir(exist_ok=True, parents=True)
+
+    print(f"[INFO] Processing run {r} in folder: {dest_run_dir}")
+
+    safe_seq = safe_name(seq_name)
+    run_with_all_echos_combined = dest_run_dir / f"{r}{safe_seq}.nii.gz"
+
+    # CASE 1 — already exists
+    if run_with_all_echos_combined.exists():
+        print(f"[OK] Combined already exists: {run_with_all_echos_combined}")
+    else:
+        # scan folder
+        nifti_files = sorted(dest_run_dir.glob("*.nii")) + sorted(dest_run_dir.glob("*.nii.gz"))
+
+        # CASE 2 — no nifti → run brkraw
+        if len(nifti_files) == 0:
+            print(f"[WARN] No NIfTI found → running brkraw")
+            try:
+                cmd = ["brkraw", "tonii", str(mge_path), "-s", str(r)]
+                subprocess.run(cmd, check=True, cwd=dest_run_dir)
+            except Exception as e:
+                print(f"[ERROR] brkraw failed: {e}")
+                continue
+            
+            nifti_files = sorted(dest_run_dir.glob("*.nii")) + sorted(dest_run_dir.glob("*.nii.gz"))
+
+        if len(nifti_files) == 0:
+            print(f"[ERROR] Still no NIfTI → skipping run {r}")
+            continue
+
+        # CASE 3 — single NIfTI
+        if len(nifti_files) == 1:
+            print(f"[INFO] Single NIfTI → copying to combined")
+            shutil.copy(nifti_files[0], run_with_all_echos_combined)
+            print(f"[OK] Created: {run_with_all_echos_combined}")
+
+        # CASE 4 — merge multiple
+        else:
+            print(f"[INFO] Merging {len(nifti_files)} files → {run_with_all_echos_combined.name}")
+            merge_cmd = ["fslmerge", "-t", str(run_with_all_echos_combined)] + [str(f) for f in nifti_files]
+            try:
+                subprocess.run(merge_cmd, check=True)
+                print(f"[OK] Merge complete: {run_with_all_echos_combined}")
+            except Exception as e:
+                print(f"[ERROR] Merge failed: {e}")
+                continue
+            
+            # Reorient to LPI
+        
+            reorientation_cmd = ["3dresample", "-orient", "LPI", "-inset", run_with_all_echos_combined, "-prefix", run_with_all_echos_combined, "-overwrite"]
+
+            try:
+                subprocess.run(reorientation_cmd, check=True)
+                print(f"[OK] Reorientation to LPI complete: {run_with_all_echos_combined}")
+            except Exception as e:
+                print(f"[ERROR] Reorientation failed: {e}")
+                continue
+
+    # ---- ALWAYS copy output for EACH run ----
+    try:
+        shutil.copy(run_with_all_echos_combined, dest_combined_dir)
+        print(f"[OK] Copied to Combined folder: {dest_combined_dir / run_with_all_echos_combined.name}")
+    except Exception as e:
+        print(f"[ERROR] Copy failed: {e}")
+
+
+#----------Combining all the MGE runs together and doign motion correction on the combined file-----------------#
+
+print("\n=== Combined MGE Files Summary ===")
+for f in sorted(dest_combined_dir.glob("*.nii.gz")):
+    print(f" - {f.name}")  
+
+# Collect all NIfTI files inside MGE_Combined
+combined_nifti_files = sorted(dest_combined_dir.glob("*.nii")) + sorted(dest_combined_dir.glob("*.nii.gz"))
+
+# ---- 1. MERGE ALL RUNS INTO ONE FILE ----
+out_file = dest_combined_dir / "all_runs_combined.nii.gz"
+
+if out_file.exists():
+    print(f"[OK] Merged file already exists: {out_file}")
+else:
+    merge_cmd = ["fslmerge", "-t", str(out_file)] + [str(f) for f in combined_nifti_files]
+
+    try:
+        subprocess.run(merge_cmd, check=True)
+        print(f"[OK] Merge complete: {out_file}")
+    except Exception as e:
+        print(f"[ERROR] Merge failed: {e}")
+        raise SystemExit
+
+# ---- MOTION CORRECTION ON MERGED FILE ----
+
+mc_prefix = dest_combined_dir / "mc_all_runs_combined.nii.gz"   # No .nii.gz here!
+if mc_prefix.exists():
+        print(f"[OK] Motion Corrected file already already exists")
+else:
+    # scan folder
+    motion_correction(input_file=str(out_file), output_prefix=str(mc_prefix))
+
+
+
+mean_image = dest_combined_dir / "mean_mc_all_runs_combined.nii.gz"
+mean_image_cmd = ["fslmaths", str(mc_prefix), "-Tmean", str(mean_image)]
+
+if mean_image.exists():
+        print(f"[OK] Mean image already exists")
+else:
+    try:
+        subprocess.run(mean_image_cmd, check=True)
+        print(f"[OK] Mean image created")
+    except Exception as e:
+        print(f"[ERROR] Mean image creation failed: {e}")
+        raise SystemExit
+
+
+print('\033[31mPlease save your ROI in the following format: roi_[Analyte or Protein]_[AAV or Direct]_[Concentration]_[Direction i.e left/right]\033[0m')
+print('\033[31mfor example: roi_dopamine_aav_150uM_right\033[0m')
+
+
+# fslviewer_cmd = ["fsleyes", str(mean_image)]
+# try:
+#     subprocess.run(fslviewer_cmd, check=True)
+# except Exception as e:
+#     print(f"[ERROR] Merge failed: {e}")
+#     raise SystemExit
+
+#-------------Extracting Tine Courses from the motion corrected combined file-----------------#
+
+roi_files = sorted(dest_combined_dir.glob("roi*.nii")) + sorted(dest_combined_dir.glob("roi*.nii.gz"))
+
+meants = ImageMeants()
+
+for r in roi_files:
+    mask_file_name = str(r)
+    file = Path(mask_file_name).with_suffix('').stem
+    out_file_name = dest_combined_dir / f"ts_{file}.txt"
+    
+    meants.inputs.out_file = out_file_name
+    meants.inputs.in_file = mc_prefix
+    meants.inputs.mask = mask_file_name
+    meants.inputs.show_all = True
+
+    meants.run()
+
+    matrix = np.loadtxt(out_file_name)
+    print("Number of rows:", matrix.shape[0])
+    print("Number of columns:", matrix.shape[1])
+
+    # ---- Create new file with Read / Slice / Phase values ----
+    read_point  = matrix[0, :]   # x
+    slice_point = matrix[1, :]   # z
+    phase_point = matrix[2, :]   # y
+
+    # Round Read_point UP (ceil)
+    read_point = np.ceil(read_point)
+    extracted = np.vstack([read_point, slice_point, phase_point])
+
+    t2_out_file = dest_combined_dir / f"t2_star_estimated_{file}.txt"
+    np.savetxt(t2_out_file, extracted, fmt="%.6f", delimiter=" ")
+
+    print(f"[SAVED] Extracted x/z/y values to: {t2_out_file}")
+
+
+# -------------------- Print summary of combined files --------------------
+ 
+
+# ---- T2* MODEL ----
+def t2star_model(TE, C, T2_star):
+    return C * np.exp(-TE / T2_star)
+
+# Example demo TE & Signal (replace with real extracted data if available)
+TE = np.array([10, 20, 30, 40, 50])
+Signal = np.array([100, 80, 62, 50, 41])
+
+initial_guess = [Signal.max(), 30]
+
+popt, pcov = curve_fit(t2star_model, TE, Signal, p0=initial_guess)
+C_est, T2star_est = popt
+C_err, T2star_err = np.sqrt(np.diag(pcov))
+
+print(f"Estimated C        = {C_est:.4f} ± {C_err:.4f}")
+print(f"Estimated T2* (ms) = {T2star_est:.4f} ± {T2star_err:.4f}")
+
+
